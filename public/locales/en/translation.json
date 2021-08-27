@@ -466,5 +466,12 @@
     "Discard audio": "Discard audio",
     "Clear working directory": "Clear working directory",
     "An error has occurred.": "An error has occurred.",
-    "Show": "Show"
+    "Show": "Show",
+    "Failed to run ffmpeg:": "Failed to run ffmpeg:",
+
+    "Set Slate": "Set Slate",
+    "Set Exit": "Set Exit",
+    "Open SD Card": "Open SD Card",
+    "Working Time": "Working Time",
+    "Click Here": "Click Here"
 }

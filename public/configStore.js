@@ -20,7 +20,7 @@ const defaults = {
   askBeforeClose: false,
   enableAskForImportChapters: true,
   enableAskForFileOpenAction: true,
-  playbackVolume: 1,
+  playbackVolume: 0,
   autoSaveProjectFile: true,
   wheelSensitivity: 0.2,
   language: undefined,
@@ -38,7 +38,7 @@ const defaults = {
   keyboardNormalSeekSpeed: 1,
   enableTransferTimestamps: true,
   outFormatLocked: undefined,
-  safeOutputFileName: true,
+  safeOutputFileName: true
 };
 
 // For portable app: https://github.com/mifi/lossless-cut/issues/645

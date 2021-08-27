@@ -5,6 +5,7 @@ const i18n = require('i18next');
 
 const menu = require('./menu');
 const configStore = require('./configStore');
+const usbDetect = require('usb-detection');
 
 const { checkNewVersion } = require('./update-checker');
 
@@ -13,6 +14,7 @@ require('./i18n');
 const { app } = electron;
 const { BrowserWindow } = electron;
 
+
 // https://github.com/electron/electron/issues/18397
 app.allowRendererProcessReuse = true;
 
@@ -20,7 +22,7 @@ unhandled({
   showDialog: true,
 });
 
-app.name = 'LosslessCut';
+app.name = 'LosslessCut - SkydiveOrBust Edition';
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -113,10 +115,18 @@ app.on('ready', async () => {
     // newVersion = '1.2.3';
     if (newVersion) updateMenu();
   }
+
+  console.log('Electron Ready');
+
+  usbDetect.startMonitoring();
+  usbDetect.on('add', (device) => { console.log('Add Usb');console.log(device); });
+  usbDetect.on('change', (device) => { console.log('Change Usb');console.log(device); });
+  usbDetect.on('remove', (device) => { console.log('Remove Usb');console.log(device); });
 });
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
+  usbDetect.stopMonitoring();
   app.quit();
 });
 
@@ -160,6 +170,13 @@ electron.ipcMain.on('setAskBeforeClose', (e, val) => {
 
 electron.ipcMain.on('setLanguage', (e, language) => {
   i18n.changeLanguage(language).then(() => updateMenu()).catch(console.error);
+});
+
+electron.ipcMain.on('open-file-dialog', async (e, defaultPath) => {
+
+  const { canceled, filePaths } = await electron.dialog.showOpenDialog({ defaultPath, properties: ['openFile', 'multiSelections'] });
+  if (canceled) return;
+  mainWindow.webContents.send('file-opened', filePaths);
 });
 
 function focusWindow() {

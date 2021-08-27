@@ -26,18 +26,19 @@ import useUserPreferences from './hooks/useUserPreferences';
 import useFfmpegOperations from './hooks/useFfmpegOperations';
 import useKeyframes from './hooks/useKeyframes';
 import useWaveform from './hooks/useWaveform';
-import NoFileLoaded from './NoFileLoaded';
+import NoFileLoaded from './SDOB-NoFileLoaded';
 import Canvas from './Canvas';
-import TopMenu from './TopMenu';
+import TopMenu from './SDOB-TopMenu';
 import HelpSheet from './HelpSheet';
 import SettingsSheet from './SettingsSheet';
 import StreamsSelector from './StreamsSelector';
 import SegmentList from './SegmentList';
 import Settings from './Settings';
-import LeftMenu from './LeftMenu';
+import LeftMenu from './SDOB-LeftMenu';
 import Timeline from './Timeline';
-import RightMenu from './RightMenu';
-import TimelineControls from './TimelineControls';
+import RightMenu from './SDOB-RightMenu';
+import TimelineControls from './SDOB-TimelineControls';
+// import ExportConfirm from './SDOB-ExportConfirm';
 import ExportConfirm from './ExportConfirm';
 import ValueTuner from './components/ValueTuner';
 import VolumeControl from './components/VolumeControl';
@@ -1212,6 +1213,54 @@ const App = memo(() => {
     else await onExportConfirm();
   }, [filePath, haveInvalidSegs, enabledOutSegments, exportConfirmEnabled, onExportConfirm]);
 
+
+  const onSdobSetSlate = useCallback(async () => {
+    if (working || !filePath || !isDurationValid(duration)) {
+      return;
+    }
+    console.log('Setting Slate');
+    try {
+      setCurrentSegIndex(0);
+      const curTime = currentTimeRef.current;
+      updateSegAtIndex(0, { end: Math.min(Math.max(curTime + 3, 0), duration), start: Math.min(Math.max(curTime - 1, 0), duration) });
+    } catch (err) {
+      errorToast(err.message);
+    }
+  }, [working, filePath, duration, updateSegAtIndex]);
+
+  const onSdobSetExit = useCallback(async () => {
+    if (working || !filePath || !isDurationValid(duration)) {
+      return;
+    }
+    console.log('Setting Exit');
+    try {
+      setCurrentSegIndex(1);
+      const curTime = currentTimeRef.current;
+      updateSegAtIndex(1, { start: Math.min(Math.max(curTime - 5, 0), duration), end: Math.min(Math.max(curTime + 30, 0), duration) });
+    } catch (err) {
+      errorToast(err.message);
+    }
+  }, [working, filePath, duration, updateSegAtIndex]);
+
+  const onSdobExportPress = useCallback(async () => {
+    if (working || !filePath) return;
+
+    if (haveInvalidSegs) {
+      errorToast(i18n.t('Start time must be before end time'));
+      return;
+    }
+
+    if (enabledOutSegments.length < 1) {
+      errorToast(i18n.t('No segments to export'));
+      return;
+    }
+
+    console.log('Exporting SDOB!');
+    // if (exportConfirmEnabled) setExportConfirmVisible(true);
+    // else await onExportConfirm();
+  }, [working, filePath, haveInvalidSegs, enabledOutSegments]);
+
+
   const capture = useCallback(async () => {
     if (!filePath) return;
 
@@ -1401,7 +1450,7 @@ const App = memo(() => {
       resetState();
       throw err;
     }
-  }, [resetState, html5ifyAndLoad, loadEdlFile, getEdlFilePath, getEdlFilePathOld, loadCutSegments, enableAskForImportChapters, autoLoadTimecode, outFormatLocked, showPreviewFileLoadedMessage, rememberConvertToSupportedFormat, setWorking]);
+  }, [resetState, working, createDummyVideo, loadEdlFile, getEdlFilePath, getEdlFilePathOld, loadCutSegments, enableAskForImportChapters, showUnsupportedFileMessage, autoLoadTimecode, outFormatLocked, showPreviewFileLoadedMessage, rememberConvertToSupportedFormat, setWorking, setCutSegments, createInitialCutSegments, setCurrentSegIndex]);
 
   const toggleHelp = useCallback(() => setHelpVisible(val => !val), []);
   const toggleSettings = useCallback(() => setSettingsVisible(val => !val), []);
@@ -2049,6 +2098,34 @@ const App = memo(() => {
     </Button>
   ), [autoExportExtraStreams, setAutoExportExtraStreams]);
 
+  const onSdobSetSlatePress = useCallback(async () => {
+    await onSdobSetSlate();
+  }, [onSdobSetSlate]);
+
+  const onSdobSetExitPress = useCallback(async () => {
+    if (working || !filePath || !isDurationValid(duration)) {
+      return;
+    }
+    if (cutSegments.length < 2) {
+      const curTime = currentTimeRef.current;
+      const cutSegmentsNew = [
+        ...cutSegments,
+        createSegment({ start: Math.min(Math.max(curTime - 5, 0), duration), end: Math.min(Math.max(curTime + 30, 0), duration) }),
+      ];
+
+      setCutSegments(cutSegmentsNew);
+      setCurrentSegIndex(cutSegmentsNew.length - 1);
+      setCutSegments(cutSegmentsNew);
+    } else {
+      await onSdobSetExit();
+    }
+  }, [working, filePath, duration, cutSegments, setCutSegments, onSdobSetExit]);
+
+
+  const onSdobOpenFileClick = () => {
+    electron.ipcRenderer.send('open-file-dialog');
+  }
+
   const onTunerRequested = useCallback((type) => {
     setSettingsVisible(false);
     setTunerVisible(type);
@@ -2201,7 +2278,7 @@ const App = memo(() => {
             />
           </SideSheet>
 
-          <TopMenu
+          {!simpleMode && <TopMenu
             filePath={filePath}
             height={topBarHeight}
             copyAnyAudioTrack={copyAnyAudioTrack}
@@ -2224,10 +2301,10 @@ const App = memo(() => {
             outFormatLocked={outFormatLocked}
             onOutFormatLockedClick={onOutFormatLockedClick}
             simpleMode={simpleMode}
-          />
+          />}
         </div>
 
-        {!isFileOpened && <NoFileLoaded top={topBarHeight} bottom={bottomBarHeight} left={leftBarWidth} mifiLink={mifiLink} toggleHelp={toggleHelp} currentCutSeg={currentCutSeg} simpleMode={simpleMode} toggleSimpleMode={toggleSimpleMode} />}
+        {!isFileOpened && <NoFileLoaded top={topBarHeight} bottom={bottomBarHeight} left={leftBarWidth} mifiLink={mifiLink} toggleHelp={toggleHelp} currentCutSeg={currentCutSeg} simpleMode={simpleMode} toggleSimpleMode={toggleSimpleMode} onSdobOpenFileClick={onSdobOpenFileClick} />}
 
         <AnimatePresence>
           {working && (
@@ -2264,7 +2341,7 @@ const App = memo(() => {
           )}
         </AnimatePresence>
 
-        <div className="no-user-select" style={{ position: 'absolute', top: topBarHeight, left: leftBarWidth, right: rightBarWidth, bottom: bottomBarHeight, visibility: !isFileOpened ? 'hidden' : undefined }} onWheel={onTimelineWheel}>
+        <div className="no-user-select" style={{ position: 'absolute', top: topBarHeight, left: leftBarWidth, right: rightBarWidth, bottom: bottomBarHeight, visibility: !isFileOpened ? 'hidden' : undefined }} onWheel={onTimelineWheel} onClick={onSdobOpenFileClick}>
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
           <video
             muted={playbackVolume === 0}
@@ -2388,70 +2465,75 @@ const App = memo(() => {
           </>
         )}
 
+        
         <motion.div
           className="no-user-select"
           style={{ background: controlsBackground, position: 'absolute', left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}
           animate={{ height: bottomBarHeight }}
         >
-          <Timeline
-            shouldShowKeyframes={shouldShowKeyframes}
-            waveform={waveform}
-            shouldShowWaveform={shouldShowWaveform}
-            waveformEnabled={waveformEnabled}
-            thumbnailsEnabled={thumbnailsEnabled}
-            neighbouringFrames={neighbouringFrames}
-            thumbnails={thumbnailsSorted}
-            getCurrentTime={getCurrentTime}
-            commandedTimeRef={commandedTimeRef}
-            startTimeOffset={startTimeOffset}
-            playerTime={playerTime}
-            commandedTime={commandedTime}
-            zoom={zoom}
-            seekAbs={seekAbs}
-            durationSafe={durationSafe}
-            apparentCutSegments={apparentCutSegments}
-            setCurrentSegIndex={setCurrentSegIndex}
-            currentSegIndexSafe={currentSegIndexSafe}
-            invertCutSegments={invertCutSegments}
-            inverseCutSegments={inverseCutSegments}
-            formatTimecode={formatTimecode}
-            timelineHeight={timelineHeight}
-            onZoomWindowStartTimeChange={setZoomWindowStartTime}
-            playing={playing}
-            isFileOpened={isFileOpened}
-            onWheel={onTimelineWheel}
-          />
+          {(isFileOpened || !simpleMode) && (
+            <>
+              <Timeline
+                shouldShowKeyframes={shouldShowKeyframes}
+                waveform={waveform}
+                shouldShowWaveform={shouldShowWaveform}
+                waveformEnabled={waveformEnabled}
+                thumbnailsEnabled={thumbnailsEnabled}
+                neighbouringFrames={neighbouringFrames}
+                thumbnails={thumbnailsSorted}
+                getCurrentTime={getCurrentTime}
+                commandedTimeRef={commandedTimeRef}
+                startTimeOffset={startTimeOffset}
+                playerTime={playerTime}
+                commandedTime={commandedTime}
+                zoom={zoom}
+                seekAbs={seekAbs}
+                durationSafe={durationSafe}
+                apparentCutSegments={apparentCutSegments}
+                setCurrentSegIndex={setCurrentSegIndex}
+                currentSegIndexSafe={currentSegIndexSafe}
+                invertCutSegments={invertCutSegments}
+                inverseCutSegments={inverseCutSegments}
+                formatTimecode={formatTimecode}
+                timelineHeight={timelineHeight}
+                onZoomWindowStartTimeChange={setZoomWindowStartTime}
+                playing={playing}
+                isFileOpened={isFileOpened}
+                onWheel={onTimelineWheel}
+              />
 
-          <TimelineControls
-            seekAbs={seekAbs}
-            currentSegIndexSafe={currentSegIndexSafe}
-            cutSegments={cutSegments}
-            currentCutSeg={currentCutSeg}
-            setCutStart={setCutStart}
-            setCutEnd={setCutEnd}
-            setCurrentSegIndex={setCurrentSegIndex}
-            cutStartTimeManual={cutStartTimeManual}
-            setCutStartTimeManual={setCutStartTimeManual}
-            cutEndTimeManual={cutEndTimeManual}
-            setCutEndTimeManual={setCutEndTimeManual}
-            duration={durationSafe}
-            jumpCutEnd={jumpCutEnd}
-            jumpCutStart={jumpCutStart}
-            startTimeOffset={startTimeOffset}
-            setCutTime={setCutTime}
-            currentApparentCutSeg={currentApparentCutSeg}
-            playing={playing}
-            shortStep={shortStep}
-            seekClosestKeyframe={seekClosestKeyframe}
-            togglePlay={togglePlay}
-            setTimelineMode={setTimelineMode}
-            timelineMode={timelineMode}
-            hasAudio={hasAudio}
-            hasVideo={hasVideo}
-            keyframesEnabled={keyframesEnabled}
-            toggleKeyframesEnabled={toggleKeyframesEnabled}
-            simpleMode={simpleMode}
-          />
+              <TimelineControls
+                seekAbs={seekAbs}
+                currentSegIndexSafe={currentSegIndexSafe}
+                cutSegments={cutSegments}
+                currentCutSeg={currentCutSeg}
+                setCutStart={setCutStart}
+                setCutEnd={setCutEnd}
+                setCurrentSegIndex={setCurrentSegIndex}
+                cutStartTimeManual={cutStartTimeManual}
+                setCutStartTimeManual={setCutStartTimeManual}
+                cutEndTimeManual={cutEndTimeManual}
+                setCutEndTimeManual={setCutEndTimeManual}
+                duration={durationSafe}
+                jumpCutEnd={jumpCutEnd}
+                jumpCutStart={jumpCutStart}
+                startTimeOffset={startTimeOffset}
+                setCutTime={setCutTime}
+                currentApparentCutSeg={currentApparentCutSeg}
+                playing={playing}
+                shortStep={shortStep}
+                seekClosestKeyframe={seekClosestKeyframe}
+                togglePlay={togglePlay}
+                setTimelineMode={setTimelineMode}
+                timelineMode={timelineMode}
+                hasAudio={hasAudio}
+                hasVideo={hasVideo}
+                keyframesEnabled={keyframesEnabled}
+                toggleKeyframesEnabled={toggleKeyframesEnabled}
+                simpleMode={simpleMode}
+              />
+            </>
+          )}
 
           <div style={{ display: 'flex', justifyContent: 'space-between', height: 36 }}>
             <LeftMenu
@@ -2462,6 +2544,8 @@ const App = memo(() => {
               toggleComfortZoom={toggleComfortZoom}
               simpleMode={simpleMode}
               toggleSimpleMode={toggleSimpleMode}
+              closeFile={closeFile}
+              isFileOpened={isFileOpened}
             />
 
             <RightMenu
@@ -2479,11 +2563,13 @@ const App = memo(() => {
               exportConfirmEnabled={exportConfirmEnabled}
               toggleExportConfirmEnabled={toggleExportConfirmEnabled}
               simpleMode={simpleMode}
+              onSdobSetSlatePress={onSdobSetSlatePress}
+              onSdobSetExitPress={onSdobSetExitPress}
             />
           </div>
         </motion.div>
 
-        <ExportConfirm filePath={filePath} autoMerge={autoMerge} setAutoMerge={setAutoMerge} areWeCutting={areWeCutting} enabledOutSegments={enabledOutSegments} visible={exportConfirmVisible} onClosePress={closeExportConfirm} onExportConfirm={onExportConfirm} keyframeCut={keyframeCut} toggleKeyframeCut={toggleKeyframeCut} renderOutFmt={renderOutFmt} preserveMovData={preserveMovData} togglePreserveMovData={togglePreserveMovData} movFastStart={movFastStart} toggleMovFastStart={toggleMovFastStart} avoidNegativeTs={avoidNegativeTs} setAvoidNegativeTs={setAvoidNegativeTs} changeOutDir={changeOutDir} outputDir={outputDir} numStreamsTotal={numStreamsTotal} numStreamsToCopy={numStreamsToCopy} setStreamsSelectorShown={setStreamsSelectorShown} exportConfirmEnabled={exportConfirmEnabled} toggleExportConfirmEnabled={toggleExportConfirmEnabled} segmentsToChapters={segmentsToChapters} toggleSegmentsToChapters={toggleSegmentsToChapters} outFormat={fileFormat} preserveMetadataOnMerge={preserveMetadataOnMerge} togglePreserveMetadataOnMerge={togglePreserveMetadataOnMerge} setOutSegTemplate={setOutSegTemplate} outSegTemplate={outSegTemplateOrDefault} generateOutSegFileNames={generateOutSegFileNames} currentSegIndexSafe={currentSegIndexSafe} isOutSegFileNamesValid={isOutSegFileNamesValid} autoDeleteMergedSegments={autoDeleteMergedSegments} setAutoDeleteMergedSegments={setAutoDeleteMergedSegments} safeOutputFileName={safeOutputFileName} toggleSafeOutputFileName={toggleSafeOutputFileName} />
+        {!simpleMode && (<ExportConfirm filePath={filePath} autoMerge={autoMerge} setAutoMerge={setAutoMerge} areWeCutting={areWeCutting} enabledOutSegments={enabledOutSegments} visible={exportConfirmVisible} onClosePress={closeExportConfirm} onExportConfirm={onExportConfirm} keyframeCut={keyframeCut} toggleKeyframeCut={toggleKeyframeCut} renderOutFmt={renderOutFmt} preserveMovData={preserveMovData} togglePreserveMovData={togglePreserveMovData} movFastStart={movFastStart} toggleMovFastStart={toggleMovFastStart} avoidNegativeTs={avoidNegativeTs} setAvoidNegativeTs={setAvoidNegativeTs} changeOutDir={changeOutDir} outputDir={outputDir} numStreamsTotal={numStreamsTotal} numStreamsToCopy={numStreamsToCopy} setStreamsSelectorShown={setStreamsSelectorShown} exportConfirmEnabled={exportConfirmEnabled} toggleExportConfirmEnabled={toggleExportConfirmEnabled} segmentsToChapters={segmentsToChapters} toggleSegmentsToChapters={toggleSegmentsToChapters} outFormat={fileFormat} preserveMetadataOnMerge={preserveMetadataOnMerge} togglePreserveMetadataOnMerge={togglePreserveMetadataOnMerge} setOutSegTemplate={setOutSegTemplate} outSegTemplate={outSegTemplateOrDefault} generateOutSegFileNames={generateOutSegFileNames} currentSegIndexSafe={currentSegIndexSafe} isOutSegFileNamesValid={isOutSegFileNamesValid} autoDeleteMergedSegments={autoDeleteMergedSegments} setAutoDeleteMergedSegments={setAutoDeleteMergedSegments} safeOutputFileName={safeOutputFileName} toggleSafeOutputFileName={toggleSafeOutputFileName} />)}
 
         <HelpSheet
           visible={helpVisible}
