@@ -6,3 +6,5 @@ icon-build
 icns-build
 doc
 /ffmpeg-mac
+yarn.lock
+package-lock.json
