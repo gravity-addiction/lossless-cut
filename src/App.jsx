@@ -1450,7 +1450,7 @@ const App = memo(() => {
       resetState();
       throw err;
     }
-  }, [resetState, working, createDummyVideo, loadEdlFile, getEdlFilePath, getEdlFilePathOld, loadCutSegments, enableAskForImportChapters, showUnsupportedFileMessage, autoLoadTimecode, outFormatLocked, showPreviewFileLoadedMessage, rememberConvertToSupportedFormat, setWorking, setCutSegments, createInitialCutSegments, setCurrentSegIndex]);
+  }, [resetState, working, loadEdlFile, getEdlFilePath, getEdlFilePathOld, loadCutSegments, enableAskForImportChapters, showUnsupportedFileMessage, autoLoadTimecode, outFormatLocked, showPreviewFileLoadedMessage, rememberConvertToSupportedFormat, setWorking, setCutSegments, createInitialCutSegments, setCurrentSegIndex]);
 
   const toggleHelp = useCallback(() => setHelpVisible(val => !val), []);
   const toggleSettings = useCallback(() => setSettingsVisible(val => !val), []);
@@ -2304,7 +2304,7 @@ const App = memo(() => {
           />}
         </div>
 
-        {!isFileOpened && <NoFileLoaded top={topBarHeight} bottom={bottomBarHeight} left={leftBarWidth} mifiLink={mifiLink} toggleHelp={toggleHelp} currentCutSeg={currentCutSeg} simpleMode={simpleMode} toggleSimpleMode={toggleSimpleMode} onSdobOpenFileClick={onSdobOpenFileClick} />}
+        {!isFileOpened && <NoFileLoaded topBarHeight={topBarHeight} bottomBarHeight={bottomBarHeight} leftBarWidth={leftBarWidth} mifiLink={mifiLink} toggleHelp={toggleHelp} currentCutSeg={currentCutSeg} simpleMode={simpleMode} toggleSimpleMode={toggleSimpleMode} onSdobOpenFileClick={onSdobOpenFileClick} />}
 
         <AnimatePresence>
           {working && (

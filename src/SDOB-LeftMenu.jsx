@@ -65,6 +65,8 @@ const LeftMenu = memo(({ zoom, setZoom, invertCutSegments, setInvertCutSegments,
           </Select>
         </>
       )}
+
+
     </div>
   );
 });

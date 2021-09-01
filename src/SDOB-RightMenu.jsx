@@ -1,3 +1,5 @@
+
+import { Select } from 'evergreen-ui';
 import React, { memo } from 'react';
 import { IoIosCamera } from 'react-icons/io';
 import { FaTrashAlt } from 'react-icons/fa';
@@ -22,6 +24,57 @@ const RightMenu = memo(({
 
   const { t } = useTranslation();
 
+  const teamList = [
+    {
+      id: '12345-a',
+      compid: '123',
+      name: 'Team A',
+      rounds: [
+        {name: '1', video: ''},
+        {name: '2', video: ''},
+        {name: '3', video: ''},
+        {name: '4', video: ''},
+        {name: '5', video: ''},
+        {name: '6', video: ''},
+        {name: '7', video: ''},
+        {name: '8', video: ''},
+        {name: 'JO', video: ''}
+      ]
+    },
+    {
+      id: '12345-b',
+      compid: '124',
+      name: 'Team B',
+      rounds: [
+        {name: '1', video: ''},
+        {name: '2', video: ''},
+        {name: '3', video: ''},
+        {name: '4', video: ''},
+        {name: '5', video: ''},
+        {name: '6', video: ''},
+        {name: '7', video: ''},
+        {name: '8', video: ''},
+        {name: 'JO', video: ''}
+      ]
+    },
+    {
+      id: '12345-c',
+      compid: '125',
+      name: 'Team C',
+      rounds: [
+        {name: '1', video: ''},
+        {name: '2', video: ''},
+        {name: '3', video: ''},
+        {name: '4', video: ''},
+        {name: '5', video: ''},
+        {name: '6', video: ''},
+        {name: '7', video: ''},
+        {name: '8', video: ''},
+        {name: 'JO', video: ''}
+      ]
+    }
+  ];
+  
   return (
     <div className="no-user-select" style={{ padding: '.3em', display: 'flex', alignItems: 'center' }}>
 
@@ -47,6 +100,14 @@ const RightMenu = memo(({
           role="button"
         />
       )}
+
+
+      <Select height={20} style={{ minWidth: 65, width: 'auto', right: '10px' }}>
+        <option key="" value="" disabled>Select Team</option>
+        {teamList.map(val => (
+          <option key={val.id} value={String(val.compid)}>{String(val.compid)} {String(val.name)}</option>
+        ))}
+      </Select>
 
       {hasVideo && (
         <>
