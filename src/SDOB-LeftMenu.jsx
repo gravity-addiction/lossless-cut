@@ -32,7 +32,7 @@ const LeftMenu = memo(({ zoom, setZoom, invertCutSegments, setInvertCutSegments,
           onClick={closeFile}
           title="Close File"
           role="button"
-        > 
+        >
           Close File
         </div>
       )}

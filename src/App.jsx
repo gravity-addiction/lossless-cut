@@ -1242,6 +1242,7 @@ const App = memo(() => {
     }
   }, [working, filePath, duration, updateSegAtIndex]);
 
+  /*
   const onSdobExportPress = useCallback(async () => {
     if (working || !filePath) return;
 
@@ -1259,7 +1260,7 @@ const App = memo(() => {
     // if (exportConfirmEnabled) setExportConfirmVisible(true);
     // else await onExportConfirm();
   }, [working, filePath, haveInvalidSegs, enabledOutSegments]);
-
+  */
 
   const capture = useCallback(async () => {
     if (!filePath) return;
@@ -1450,7 +1451,7 @@ const App = memo(() => {
       resetState();
       throw err;
     }
-  }, [resetState, working, loadEdlFile, getEdlFilePath, getEdlFilePathOld, loadCutSegments, enableAskForImportChapters, showUnsupportedFileMessage, autoLoadTimecode, outFormatLocked, showPreviewFileLoadedMessage, rememberConvertToSupportedFormat, setWorking, setCutSegments, createInitialCutSegments, setCurrentSegIndex]);
+  }, [resetState, loadEdlFile, getEdlFilePath, getEdlFilePathOld, loadCutSegments, enableAskForImportChapters, autoLoadTimecode, outFormatLocked, showPreviewFileLoadedMessage, rememberConvertToSupportedFormat, setWorking, html5ifyAndLoad]);
 
   const toggleHelp = useCallback(() => setHelpVisible(val => !val), []);
   const toggleSettings = useCallback(() => setSettingsVisible(val => !val), []);
@@ -2124,7 +2125,7 @@ const App = memo(() => {
 
   const onSdobOpenFileClick = () => {
     electron.ipcRenderer.send('open-file-dialog');
-  }
+  };
 
   const onTunerRequested = useCallback((type) => {
     setSettingsVisible(false);
@@ -2278,30 +2279,32 @@ const App = memo(() => {
             />
           </SideSheet>
 
-          {!simpleMode && <TopMenu
-            filePath={filePath}
-            height={topBarHeight}
-            copyAnyAudioTrack={copyAnyAudioTrack}
-            toggleStripAudio={toggleStripAudio}
-            customOutDir={customOutDir}
-            changeOutDir={changeOutDir}
-            clearOutDir={clearOutDir}
-            isCustomFormatSelected={isCustomFormatSelected}
-            renderOutFmt={renderOutFmt}
-            toggleHelp={toggleHelp}
-            toggleSettings={toggleSettings}
-            numStreamsToCopy={numStreamsToCopy}
-            numStreamsTotal={numStreamsTotal}
-            setStreamsSelectorShown={setStreamsSelectorShown}
-            enabledOutSegments={enabledOutSegments}
-            autoMerge={autoMerge}
-            setAutoMerge={setAutoMerge}
-            autoDeleteMergedSegments={autoDeleteMergedSegments}
-            setAutoDeleteMergedSegments={setAutoDeleteMergedSegments}
-            outFormatLocked={outFormatLocked}
-            onOutFormatLockedClick={onOutFormatLockedClick}
-            simpleMode={simpleMode}
-          />}
+          {!simpleMode && (
+            <TopMenu
+              filePath={filePath}
+              height={topBarHeight}
+              copyAnyAudioTrack={copyAnyAudioTrack}
+              toggleStripAudio={toggleStripAudio}
+              customOutDir={customOutDir}
+              changeOutDir={changeOutDir}
+              clearOutDir={clearOutDir}
+              isCustomFormatSelected={isCustomFormatSelected}
+              renderOutFmt={renderOutFmt}
+              toggleHelp={toggleHelp}
+              toggleSettings={toggleSettings}
+              numStreamsToCopy={numStreamsToCopy}
+              numStreamsTotal={numStreamsTotal}
+              setStreamsSelectorShown={setStreamsSelectorShown}
+              enabledOutSegments={enabledOutSegments}
+              autoMerge={autoMerge}
+              setAutoMerge={setAutoMerge}
+              autoDeleteMergedSegments={autoDeleteMergedSegments}
+              setAutoDeleteMergedSegments={setAutoDeleteMergedSegments}
+              outFormatLocked={outFormatLocked}
+              onOutFormatLockedClick={onOutFormatLockedClick}
+              simpleMode={simpleMode}
+            />
+          )}
         </div>
 
         {!isFileOpened && <NoFileLoaded topBarHeight={topBarHeight} bottomBarHeight={bottomBarHeight} leftBarWidth={leftBarWidth} mifiLink={mifiLink} toggleHelp={toggleHelp} currentCutSeg={currentCutSeg} simpleMode={simpleMode} toggleSimpleMode={toggleSimpleMode} onSdobOpenFileClick={onSdobOpenFileClick} />}
@@ -2341,7 +2344,7 @@ const App = memo(() => {
           )}
         </AnimatePresence>
 
-        <div className="no-user-select" style={{ position: 'absolute', top: topBarHeight, left: leftBarWidth, right: rightBarWidth, bottom: bottomBarHeight, visibility: !isFileOpened ? 'hidden' : undefined }} onWheel={onTimelineWheel} onClick={onSdobOpenFileClick}>
+        <div className="no-user-select" role="button" style={{ position: 'absolute', top: topBarHeight, left: leftBarWidth, right: rightBarWidth, bottom: bottomBarHeight, visibility: !isFileOpened ? 'hidden' : undefined }} onWheel={onTimelineWheel} onClick={onSdobOpenFileClick}>
           {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
           <video
             muted={playbackVolume === 0}
@@ -2465,7 +2468,7 @@ const App = memo(() => {
           </>
         )}
 
-        
+
         <motion.div
           className="no-user-select"
           style={{ background: controlsBackground, position: 'absolute', left: 0, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}

@@ -1,4 +1,3 @@
-
 import { Select } from 'evergreen-ui';
 import React, { memo } from 'react';
 import { IoIosCamera } from 'react-icons/io';
@@ -8,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 import { primaryTextColor } from './colors';
 
-import ExportButton from './components/ExportButton';
+// import ExportButton from './components/ExportButton';
 import SdobExportButton from './components/SdobExportButton';
 import SdobSetExitButton from './components/SdobSetExitButton';
 import SdobSetSlateButton from './components/SdobSetSlateButton';
@@ -16,8 +15,8 @@ import ToggleExportConfirm from './components/ToggleExportConfirm';
 
 
 const RightMenu = memo(({
-  isRotationSet, rotation, areWeCutting, increaseRotation, cleanupFiles, renderCaptureFormatButton,
-  capture, onExportPress, enabledOutSegments, hasVideo, autoMerge, exportConfirmEnabled, toggleExportConfirmEnabled,
+  isRotationSet, rotation, increaseRotation, cleanupFiles, renderCaptureFormatButton,
+  capture, onExportPress, enabledOutSegments, hasVideo, exportConfirmEnabled, toggleExportConfirmEnabled,
   simpleMode, onSdobSetExitPress, onSdobSetSlatePress,
 }) => {
   const rotationStr = `${rotation}°`;
@@ -30,51 +29,51 @@ const RightMenu = memo(({
       compid: '123',
       name: 'Team A',
       rounds: [
-        {name: '1', video: ''},
-        {name: '2', video: ''},
-        {name: '3', video: ''},
-        {name: '4', video: ''},
-        {name: '5', video: ''},
-        {name: '6', video: ''},
-        {name: '7', video: ''},
-        {name: '8', video: ''},
-        {name: 'JO', video: ''}
-      ]
+        { name: '1', video: '' },
+        { name: '2', video: '' },
+        { name: '3', video: '' },
+        { name: '4', video: '' },
+        { name: '5', video: '' },
+        { name: '6', video: '' },
+        { name: '7', video: '' },
+        { name: '8', video: '' },
+        { name: 'JO', video: '' },
+      ],
     },
     {
       id: '12345-b',
       compid: '124',
       name: 'Team B',
       rounds: [
-        {name: '1', video: ''},
-        {name: '2', video: ''},
-        {name: '3', video: ''},
-        {name: '4', video: ''},
-        {name: '5', video: ''},
-        {name: '6', video: ''},
-        {name: '7', video: ''},
-        {name: '8', video: ''},
-        {name: 'JO', video: ''}
-      ]
+        { name: '1', video: '' },
+        { name: '2', video: '' },
+        { name: '3', video: '' },
+        { name: '4', video: '' },
+        { name: '5', video: '' },
+        { name: '6', video: '' },
+        { name: '7', video: '' },
+        { name: '8', video: '' },
+        { name: 'JO', video: '' },
+      ],
     },
     {
       id: '12345-c',
       compid: '125',
       name: 'Team C',
       rounds: [
-        {name: '1', video: ''},
-        {name: '2', video: ''},
-        {name: '3', video: ''},
-        {name: '4', video: ''},
-        {name: '5', video: ''},
-        {name: '6', video: ''},
-        {name: '7', video: ''},
-        {name: '8', video: ''},
-        {name: 'JO', video: ''}
-      ]
-    }
+        { name: '1', video: '' },
+        { name: '2', video: '' },
+        { name: '3', video: '' },
+        { name: '4', video: '' },
+        { name: '5', video: '' },
+        { name: '6', video: '' },
+        { name: '7', video: '' },
+        { name: '8', video: '' },
+        { name: 'JO', video: '' },
+      ],
+    },
   ];
-  
+
   return (
     <div className="no-user-select" style={{ padding: '.3em', display: 'flex', alignItems: 'center' }}>
 
@@ -127,7 +126,7 @@ const RightMenu = memo(({
             enabledOutSegments={enabledOutSegments}
             onClick={onExportPress}
           />
-          
+
           <IoIosCamera
             size={25}
             title={t('Capture frame')}

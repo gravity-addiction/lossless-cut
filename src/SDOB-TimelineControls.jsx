@@ -178,15 +178,15 @@ const TimelineControls = memo(({
         onClick={() => seekClosestKeyframe(-1)}
       />
 
-      {(
-        <FaCaretLeft
-          style={{ marginLeft: 5, marginRight: 5 }}
-          size={20}
-          role="button"
-          title={t('One frame back')}
-          onClick={() => shortStep(-1)}
-        />
-      )}
+
+      <FaCaretLeft
+        style={{ marginLeft: 5, marginRight: 5 }}
+        size={20}
+        role="button"
+        title={t('One frame back')}
+        onClick={() => shortStep(-1)}
+      />
+
 
       <PlayPause
         size={16}
@@ -194,15 +194,15 @@ const TimelineControls = memo(({
         onClick={togglePlay}
       />
 
-      {(
-        <FaCaretRight
-          style={{ marginRight: 5, marginLeft: 5 }}
-          size={20}
-          role="button"
-          title={t('One frame forward')}
-          onClick={() => shortStep(1)}
-        />
-      )}
+
+      <FaCaretRight
+        style={{ marginRight: 5, marginLeft: 5 }}
+        size={20}
+        role="button"
+        title={t('One frame forward')}
+        onClick={() => shortStep(1)}
+      />
+
 
       <IoMdKey
         style={{ marginLeft: 5 }}
