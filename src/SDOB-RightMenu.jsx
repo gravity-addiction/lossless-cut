@@ -38,9 +38,13 @@ const RightMenu = memo(({
   };
 
   const changedComp = (id) => {
+    if (!Array.isArray(compList[compInd].teams)) {
+      return;
+    }
     // Find Comp
     const compInd = compList.findIndex((comp) => String(comp.id) === String(id));
     if (compInd > -1) {
+      console.log('Set Teams');
       setTeamList((compList[compInd].teams || []).sort((a, b) => Number(a.teamNumber) > Number(b.teamNumber)) ? 1 : -1);
       changedTeam(((compList[compInd].teams || [])[0] || {}).id);
     }
@@ -59,9 +63,11 @@ const RightMenu = memo(({
     fetch('https://dev.skydiveorbust.com/api/latest/events/2020_cf_ghost_nationals/comps')
       .then(res => res.json())
       .then((compListResp) => {
-        console.log('Comp List', compListResp.comps);
-        setCompList(compListResp.comps || []);
-        changedComp(((compListResp.comps || [])[0] || {}).id);
+        if (Array.isArray(compListResp.comps)) {
+          console.log('Comp List', compListResp.comps);
+          setCompList(compListResp.comps || []);
+          changedComp(((compListResp.comps || [])[0] || {}).id);
+        }
       });
   });
 
@@ -94,14 +100,14 @@ const RightMenu = memo(({
       <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', height: 60 }}>
         <Select width="100%" height={50} style={{ minWidth: 120, flex: 3, right: '10px', fontSize: 18 }} onChange={changedCompClick}>
           <option key="" value="" disabled>Select Comp</option>
-          {(compList || []).map(val => (
+          {compList.map(val => (
             <option key={val.id} value={String(val.id)}>{String(val.name)} {String(val.class)}</option>
           ))}
         </Select>
 
         <Select width="100%" height={50} size={500} style={{ minWidth: 120, flex: 3, right: '10px', fontSize: 18 }} onChange={changedTeamClick}>
           <option key="" value="" disabled>Select Team</option>
-          {(teamList || []).map(val => (
+          {teamList.map(val => (
             <option key={val.id} value={String(val.id)}>{String(val.teamNumber)} {String(val.name)}</option>
           ))}
         </Select>
@@ -109,7 +115,7 @@ const RightMenu = memo(({
 
         <Select width="100%" height={50} size={500} style={{ minWidth: 40, flex: 1, right: '10px', fontSize: 18 }}>
           <option key="" value="" disabled>Select Round</option>
-          {(roundList || []).map(val => (
+          {roundList.map(val => (
             <option key={val.i} value={String(val.roundNum)}>{String(val.roundNum)}</option>
           ))}
         </Select>
