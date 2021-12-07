@@ -33,9 +33,9 @@ const RightMenu = memo(({
     const teamInd = teamList.findIndex((team) => String(team.id) === String(id));
     if (teamInd > -1) {
       // setTeamList((compList[compInd].teams || []).sort((a, b) => (Number(a.teamNumber) > Number(b.teamNumber)) ? 1 : -1));
-      setRoundList([{ i: 0, roundNum: '1' }, { i: 1, roundNum: '2' }, { i: 2, roundNum: '3' }])
+      setRoundList([{ i: 0, roundNum: '1' }, { i: 1, roundNum: '2' }, { i: 2, roundNum: '3' }]);
     }
-  }  
+  };
 
   const changedComp = (id) => {
     // Find Comp
@@ -49,11 +49,11 @@ const RightMenu = memo(({
 
   const changedCompClick = (event) => {
     changedComp(event.target.value);
-  }
+  };
 
   const changedTeamClick = (event) => {
     changedTeam(event.target.value);
-  }  
+  };
 
   useEffect(() => {
     fetch('https://dev.skydiveorbust.com/api/latest/events/2020_cf_ghost_nationals/comps')
@@ -63,7 +63,7 @@ const RightMenu = memo(({
         setCompList(compListResp.comps || []);
         changedComp(((compListResp.comps || [])[0] || {}).id);
       });
-  }, []);
+  }, [changedComp]);
 
   return (
     <div className="no-user-select" style={{ padding: '.3em', flex: 10, display: 'flex', alignItems: 'center' }}>
@@ -112,8 +112,8 @@ const RightMenu = memo(({
           {roundList.map(val => (
             <option key={val.i} value={String(val.roundNum)}>{String(val.roundNum)}</option>
           ))}
-        </Select>        
-      </div>  
+        </Select>
+      </div>
 
       {hasVideo && (
         <>
