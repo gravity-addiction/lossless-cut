@@ -28,15 +28,13 @@ const RightMenu = memo(({
   const [roundList, setRoundList] = useState([]);
 
   useEffect(() => {
-    fetch("https://dev.skydiveorbust.com/api/latest/events/2020_cf_ghost_nationals/comps")
-    .then(res => res.json())
-    .then(
-      (compListResp) => {
+    fetch('https://dev.skydiveorbust.com/api/latest/events/2020_cf_ghost_nationals/comps')
+      .then(res => res.json())
+      .then((compListResp) => {
         console.log('Comp List', compListResp.comps);
         setCompList(compListResp.comps || []);
         changedComp(((compListResp.comps || [])[0] || {}).id);
-      }
-    );
+      });
   }, []);
 
   const changedComp = (id) => {
