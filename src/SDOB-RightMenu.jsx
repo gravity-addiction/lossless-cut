@@ -1,5 +1,5 @@
 import { Select } from 'evergreen-ui';
-import React, { memo } from 'react';
+import React, { memo, useEffect, useState } from 'react';
 import { IoIosCamera } from 'react-icons/io';
 import { FaTrashAlt } from 'react-icons/fa';
 import { MdRotate90DegreesCcw } from 'react-icons/md';
@@ -23,59 +23,50 @@ const RightMenu = memo(({
 
   const { t } = useTranslation();
 
-  const teamList = [
-    {
-      id: '12345-a',
-      compid: '123',
-      name: 'Team A',
-      rounds: [
-        { name: '1', video: '' },
-        { name: '2', video: '' },
-        { name: '3', video: '' },
-        { name: '4', video: '' },
-        { name: '5', video: '' },
-        { name: '6', video: '' },
-        { name: '7', video: '' },
-        { name: '8', video: '' },
-        { name: 'JO', video: '' },
-      ],
-    },
-    {
-      id: '12345-b',
-      compid: '124',
-      name: 'Team B',
-      rounds: [
-        { name: '1', video: '' },
-        { name: '2', video: '' },
-        { name: '3', video: '' },
-        { name: '4', video: '' },
-        { name: '5', video: '' },
-        { name: '6', video: '' },
-        { name: '7', video: '' },
-        { name: '8', video: '' },
-        { name: 'JO', video: '' },
-      ],
-    },
-    {
-      id: '12345-c',
-      compid: '125',
-      name: 'Team C',
-      rounds: [
-        { name: '1', video: '' },
-        { name: '2', video: '' },
-        { name: '3', video: '' },
-        { name: '4', video: '' },
-        { name: '5', video: '' },
-        { name: '6', video: '' },
-        { name: '7', video: '' },
-        { name: '8', video: '' },
-        { name: 'JO', video: '' },
-      ],
-    },
-  ];
+  const [compList, setCompList] = useState([]);
+  const [teamList, setTeamList] = useState([]);
+  const [roundList, setRoundList] = useState([]);
+
+  useEffect(() => {
+    fetch("https://dev.skydiveorbust.com/api/latest/events/2020_cf_ghost_nationals/comps")
+    .then(res => res.json())
+    .then(
+      (compListResp) => {
+        console.log('Comp List', compListResp.comps);
+        setCompList(compListResp.comps || []);
+        changedComp(((compListResp.comps || [])[0] || {}).id);
+      }
+    );
+  }, []);
+
+  const changedComp = (id) => {
+    // Find Comp
+    const compInd = compList.findIndex((comp) => String(comp.id) === String(id));
+    if (compInd > -1) {
+      setTeamList((compList[compInd].teams || []).sort((a, b) => (Number(a.teamNumber) > Number(b.teamNumber)) ? 1 : -1));
+      changedTeam(((compList[compInd].teams || [])[0] || {}).id);
+    }
+  }
+
+  const changedTeam = (id) => {
+    // Find Team
+    const teamInd = teamList.findIndex((team) => String(team.id) === String(id));
+    if (teamInd > -1) {
+      // setTeamList((compList[compInd].teams || []).sort((a, b) => (Number(a.teamNumber) > Number(b.teamNumber)) ? 1 : -1));
+      setRoundList([{i: 0, roundNum: '1'}, {i: 1, roundNum: '2'}, {i: 2, roundNum: '3'}, ])
+    }
+  }  
+
+  const changedCompClick = (event) => {
+    changedComp(event.target.value);
+  }
+
+  const changedTeamClick = (event) => {
+    changedTeam(event.target.value);
+  }  
 
   return (
-    <div className="no-user-select" style={{ padding: '.3em', display: 'flex', alignItems: 'center' }}>
+    <div className="no-user-select" style={{ padding: '.3em', flex: 10, display: 'flex', alignItems: 'center' }}>
 
       {!simpleMode && hasVideo && (
         <>
@@ -100,13 +91,29 @@ const RightMenu = memo(({
         />
       )}
 
+      <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', height: 60 }}>
+        <Select width="100%" height={50} style={{ minWidth: 120, flex: 3, right: '10px', fontSize: 18 }} onChange={changedCompClick}>
+          <option key="" value="" disabled>Select Comp</option>
+          {compList.map(val => (
+            <option key={val.id} value={String(val.id)}>{String(val.name)} {String(val.class)}</option>
+          ))}
+        </Select>
 
-      <Select height={20} style={{ minWidth: 65, width: 'auto', right: '10px' }}>
-        <option key="" value="" disabled>Select Team</option>
-        {teamList.map(val => (
-          <option key={val.id} value={String(val.compid)}>{String(val.compid)} {String(val.name)}</option>
-        ))}
-      </Select>
+        <Select width="100%" height={50} size={500} style={{ minWidth: 120, flex: 3, right: '10px', fontSize: 18 }} onChange={changedTeamClick}>
+          <option key="" value="" disabled>Select Team</option>
+          {teamList.map(val => (
+            <option key={val.id} value={String(val.id)}>{String(val.teamNumber)} {String(val.name)}</option>
+          ))}
+        </Select>
+
+
+        <Select width="100%" height={50} size={500} style={{ minWidth: 40, flex: 1, right: '10px', fontSize: 18 }}>
+          <option key="" value="" disabled>Select Round</option>
+          {roundList.map(val => (
+            <option key={val.i} value={String(val.roundNum)}>{String(val.roundNum)}</option>
+          ))}
+        </Select>        
+      </div>  
 
       {hasVideo && (
         <>

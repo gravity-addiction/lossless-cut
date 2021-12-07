@@ -1242,26 +1242,6 @@ const App = memo(() => {
     }
   }, [working, filePath, duration, updateSegAtIndex]);
 
-  /*
-  const onSdobExportPress = useCallback(async () => {
-    if (working || !filePath) return;
-
-    if (haveInvalidSegs) {
-      errorToast(i18n.t('Start time must be before end time'));
-      return;
-    }
-
-    if (enabledOutSegments.length < 1) {
-      errorToast(i18n.t('No segments to export'));
-      return;
-    }
-
-    console.log('Exporting SDOB!');
-    // if (exportConfirmEnabled) setExportConfirmVisible(true);
-    // else await onExportConfirm();
-  }, [working, filePath, haveInvalidSegs, enabledOutSegments]);
-  */
-
   const capture = useCallback(async () => {
     if (!filePath) return;
 
@@ -2538,7 +2518,7 @@ const App = memo(() => {
             </>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', height: 36 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', height: 60 }}>
             <LeftMenu
               zoom={zoom}
               setZoom={setZoom}

@@ -23,7 +23,7 @@ const LeftMenu = memo(({ zoom, setZoom, invertCutSegments, setInvertCutSegments,
   const zoomOptions = Array(13).fill().map((unused, z) => 2 ** z);
 
   return (
-    <div className="no-user-select" style={{ padding: '.3em', display: 'flex', alignItems: 'center' }}>
+    <div className="no-user-select" style={{ padding: '.3em', display: 'flex', flex: 1, alignItems: 'center' }}>
       <SimpleModeButton simpleMode={simpleMode} toggleSimpleMode={toggleSimpleMode} />
 
       {isFileOpened && (
