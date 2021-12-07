@@ -63,7 +63,7 @@ const RightMenu = memo(({
         setCompList(compListResp.comps || []);
         changedComp(((compListResp.comps || [])[0] || {}).id);
       });
-  }, [changedComp]);
+  });
 
   return (
     <div className="no-user-select" style={{ padding: '.3em', flex: 10, display: 'flex', alignItems: 'center' }}>
