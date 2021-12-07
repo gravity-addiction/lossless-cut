@@ -28,16 +28,6 @@ const RightMenu = memo(({
   const [roundList, setRoundList] = useState([]);
 
 
-
-  const changedComp = (id) => {
-    // Find Comp
-    const compInd = compList.findIndex((comp) => String(comp.id) === String(id));
-    if (compInd > -1) {
-      setTeamList((compList[compInd].teams || []).sort((a, b) => (Number(a.teamNumber) > Number(b.teamNumber)) ? 1 : -1));
-      changedTeam(((compList[compInd].teams || [])[0] || {}).id);
-    }
-  };
-
   const changedTeam = (id) => {
     // Find Team
     const teamInd = teamList.findIndex((team) => String(team.id) === String(id));
@@ -46,6 +36,16 @@ const RightMenu = memo(({
       setRoundList([{ i: 0, roundNum: '1' }, { i: 1, roundNum: '2' }, { i: 2, roundNum: '3' }])
     }
   }  
+
+  const changedComp = (id) => {
+    // Find Comp
+    const compInd = compList.findIndex((comp) => String(comp.id) === String(id));
+    if (compInd > -1) {
+      setTeamList((compList[compInd].teams || []).sort((a, b) => Number(a.teamNumber) > Number(b.teamNumber)) ? 1 : -1);
+      changedTeam(((compList[compInd].teams || [])[0] || {}).id);
+    }
+  };
+
 
   const changedCompClick = (event) => {
     changedComp(event.target.value);
