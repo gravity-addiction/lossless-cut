@@ -29,6 +29,9 @@ const RightMenu = memo(({
 
 
   const changedTeam = (id) => {
+    if (!Array.isArray(teamList)) {
+      return;
+    }
     // Find Team
     const teamInd = teamList.findIndex((team) => String(team.id) === String(id));
     if (teamInd > -1) {
@@ -38,12 +41,15 @@ const RightMenu = memo(({
   };
 
   const changedComp = (id) => {
-    if (!Array.isArray(compList[compInd].teams)) {
+    if (!Array.isArray(compList)) {
       return;
     }
     // Find Comp
     const compInd = compList.findIndex((comp) => String(comp.id) === String(id));
     if (compInd > -1) {
+      if (!Array.isArray(compList[compInd].teams)) {
+        return;
+      }      
       console.log('Set Teams');
       setTeamList((compList[compInd].teams || []).sort((a, b) => Number(a.teamNumber) > Number(b.teamNumber)) ? 1 : -1);
       changedTeam(((compList[compInd].teams || [])[0] || {}).id);
