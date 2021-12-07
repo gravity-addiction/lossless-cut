@@ -27,15 +27,7 @@ const RightMenu = memo(({
   const [teamList, setTeamList] = useState([]);
   const [roundList, setRoundList] = useState([]);
 
-  useEffect(() => {
-    fetch('https://dev.skydiveorbust.com/api/latest/events/2020_cf_ghost_nationals/comps')
-      .then(res => res.json())
-      .then((compListResp) => {
-        console.log('Comp List', compListResp.comps);
-        setCompList(compListResp.comps || []);
-        changedComp(((compListResp.comps || [])[0] || {}).id);
-      });
-  }, []);
+
 
   const changedComp = (id) => {
     // Find Comp
@@ -44,14 +36,14 @@ const RightMenu = memo(({
       setTeamList((compList[compInd].teams || []).sort((a, b) => (Number(a.teamNumber) > Number(b.teamNumber)) ? 1 : -1));
       changedTeam(((compList[compInd].teams || [])[0] || {}).id);
     }
-  }
+  };
 
   const changedTeam = (id) => {
     // Find Team
     const teamInd = teamList.findIndex((team) => String(team.id) === String(id));
     if (teamInd > -1) {
       // setTeamList((compList[compInd].teams || []).sort((a, b) => (Number(a.teamNumber) > Number(b.teamNumber)) ? 1 : -1));
-      setRoundList([{i: 0, roundNum: '1'}, {i: 1, roundNum: '2'}, {i: 2, roundNum: '3'}, ])
+      setRoundList([{ i: 0, roundNum: '1' }, { i: 1, roundNum: '2' }, { i: 2, roundNum: '3' }])
     }
   }  
 
@@ -62,6 +54,16 @@ const RightMenu = memo(({
   const changedTeamClick = (event) => {
     changedTeam(event.target.value);
   }  
+
+  useEffect(() => {
+    fetch('https://dev.skydiveorbust.com/api/latest/events/2020_cf_ghost_nationals/comps')
+      .then(res => res.json())
+      .then((compListResp) => {
+        console.log('Comp List', compListResp.comps);
+        setCompList(compListResp.comps || []);
+        changedComp(((compListResp.comps || [])[0] || {}).id);
+      });
+  }, []);
 
   return (
     <div className="no-user-select" style={{ padding: '.3em', flex: 10, display: 'flex', alignItems: 'center' }}>
