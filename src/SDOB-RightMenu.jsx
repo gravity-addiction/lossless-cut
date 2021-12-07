@@ -52,7 +52,7 @@ const RightMenu = memo(({
       }
       console.log('Set Teams');
       let teams = compList[compInd].teams || [];
-      teams = teams.sort((a, b) => Number(a.teamNumber) > Number(b.teamNumber) ? 1 : -1);
+      teams = teams.sort((a, b) => (Number(a.teamNumber) > Number(b.teamNumber)) ? 1 : -1);
       setTeamList(teams);
       if (teams && teams.length) {
         changedTeam(teams[0].id);
