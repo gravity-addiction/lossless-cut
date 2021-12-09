@@ -24,6 +24,7 @@ import theme from './theme';
 import useTimelineScroll from './hooks/useTimelineScroll';
 import useUserPreferences from './hooks/useUserPreferences';
 import useFfmpegOperations from './hooks/useFfmpegOperations';
+import useCopyOperations from './hooks/useCopyOperations';
 import useKeyframes from './hooks/useKeyframes';
 import useWaveform from './hooks/useWaveform';
 import NoFileLoaded from './SDOB-NoFileLoaded';
@@ -117,6 +118,7 @@ const App = memo(() => {
   const [detectedFileFormat, setDetectedFileFormat] = useState();
   const [rotation, setRotation] = useState(360);
   const [cutProgress, setCutProgress] = useState();
+  const [copyProgress, setCopyProgress] = useState();
   const [startTimeOffset, setStartTimeOffset] = useState(0);
   const [filePath, setFilePath] = useState('');
   const [filePathSaved, setFilePathSaved] = useState('');
@@ -180,6 +182,10 @@ const App = memo(() => {
   const {
     mergeFiles: ffmpegMergeFiles, html5ifyDummy, cutMultiple, autoMergeSegments, html5ify: ffmpegHtml5ify, fixInvalidDuration,
   } = useFfmpegOperations({ filePath, enableTransferTimestamps });
+
+  const {
+    copySource: copySource,
+  } = useCopyOperations()
 
   const outSegTemplateOrDefault = outSegTemplate || defaultOutSegTemplate;
 
@@ -1109,6 +1115,9 @@ const App = memo(() => {
 
     if (workingRef.current) return;
     try {
+      console.log('File', filePath);
+      const ext = getOutFileExtension({ isCustomFormatSelected, outFormat: fileFormat, filePath });
+      copySource({ source: filePath, outPath: outputDir + '/test.' + ext });
       setWorking(i18n.t('Exporting'));
 
       console.log('outSegTemplateOrDefault', outSegTemplateOrDefault);

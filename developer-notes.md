@@ -32,3 +32,16 @@ npm start
 - Release draft at github
 - Bump [snap version](https://snapcraft.io/losslesscut/listing)
 - `npm run scan-i18n` to get the newest Englist strings and push so weblate gets them
+
+
+## Source Copy progress bar
+```
+cd ~/Downloads
+wget http://ftp.gnu.org/gnu/coreutils/coreutils-8.32.tar.xz
+tar xvJf coreutils-8.32.tar.xz
+cd coreutils-8.32/
+patch -p1 -i ../lossless-cut/patches/advcpmv-0.8-8.32.patch
+./configure
+make
+```
+cp and mv files are patched
