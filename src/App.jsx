@@ -38,8 +38,8 @@ import LeftMenu from './SDOB-LeftMenu';
 import Timeline from './Timeline';
 import RightMenu from './SDOB-RightMenu';
 import TimelineControls from './SDOB-TimelineControls';
-// import ExportConfirm from './SDOB-ExportConfirm';
-import ExportConfirm from './ExportConfirm';
+import ExportConfirm from './SDOB-ExportConfirm';
+// import ExportConfirm from './ExportConfirm';
 import ValueTuner from './components/ValueTuner';
 import VolumeControl from './components/VolumeControl';
 import SubtitleControl from './components/SubtitleControl';
@@ -119,6 +119,7 @@ const App = memo(() => {
   const [cutProgress, setCutProgress] = useState();
   const [startTimeOffset, setStartTimeOffset] = useState(0);
   const [filePath, setFilePath] = useState('');
+  const [filePathSaved, setFilePathSaved] = useState('');
   const [externalStreamFiles, setExternalStreamFiles] = useState([]);
   const [customTagsByFile, setCustomTagsByFile] = useState({});
   const [customTagsByStreamId, setCustomTagsByStreamId] = useState({});
@@ -555,7 +556,7 @@ const App = memo(() => {
           return;
         }
 
-        await saveLlcProject({ savePath: saveOperationEdlFilePath, filePath: saveOperationFilePath, cutSegments: saveOperationCutSegments });
+        //-/ await saveLlcProject({ savePath: saveOperationEdlFilePath, filePath: saveOperationFilePath, cutSegments: saveOperationCutSegments });
         lastSaveOperation.current = debouncedSaveOperation;
       } catch (err) {
         errorToast(i18n.t('Unable to save project file'));
@@ -716,7 +717,7 @@ const App = memo(() => {
   const nonCopiedExtraStreams = useMemo(() => extraStreams
     .filter((stream) => !isCopyingStreamId(filePath, stream.index)), [extraStreams, filePath, isCopyingStreamId]);
 
-  const exportExtraStreams = autoExportExtraStreams && nonCopiedExtraStreams.length > 0;
+  const exportExtraStreams = (autoExportExtraStreams === 'extract') && nonCopiedExtraStreams.length > 0;
 
   const copyFileStreams = useMemo(() => Object.entries(copyStreamIdsByFile).map(([path, streamIdsMap]) => ({
     path,
@@ -835,6 +836,7 @@ const App = memo(() => {
       setCutProgress();
       setStartTimeOffset(0);
       setFilePath(''); // Setting video src="" prevents memory leak in chromium
+      setFilePathSaved('');
       setExternalStreamFiles([]);
       setCustomTagsByFile({});
       setCustomTagsByStreamId({});
@@ -1160,7 +1162,9 @@ const App = memo(() => {
         });
       }
 
-      const msgs = [i18n.t('Done! Note: cutpoints may be inaccurate. Make sure you test the output files in your desired player/editor before you delete the source. If output does not look right, see the HELP page.')];
+      const msgs = [
+      //  i18n.t('Done! Note: cutpoints may be inaccurate. Make sure you test the output files in your desired player/editor before you delete the source. If output does not look right, see the HELP page.')
+      ];
 
       // https://github.com/mifi/lossless-cut/issues/329
       if (isIphoneHevc(fileFormatData, mainStreams)) msgs.push(i18n.t('There is a known issue with cutting iPhone HEVC videos. The output file may not work in all players.'));
@@ -1174,7 +1178,7 @@ const App = memo(() => {
         }
       }
 
-      if (!hideAllNotifications) openDirToast({ dirPath: outputDir, text: msgs.join(' '), timer: 15000 });
+      if (!hideAllNotifications && msgs.length) openDirToast({ dirPath: outputDir, text: msgs.join(' '), timer: 15000 });
     } catch (err) {
       console.error('stdout:', err.stdout);
       console.error('stderr:', err.stderr);
@@ -1218,7 +1222,7 @@ const App = memo(() => {
     if (working || !filePath || !isDurationValid(duration)) {
       return;
     }
-    console.log('Setting Slate');
+    console.log('Setting Slate', filePath);
     try {
       setCurrentSegIndex(0);
       const curTime = currentTimeRef.current;
@@ -1322,7 +1326,7 @@ const App = memo(() => {
 
   const loadEdlFile = useCallback(async (path, type) => {
     console.log('Loading EDL file', type, path);
-    loadCutSegments(await readEdlFile({ type, path }));
+    //-/ loadCutSegments(await readEdlFile({ type, path }));
   }, [loadCutSegments]);
 
 
@@ -1531,7 +1535,7 @@ const App = memo(() => {
     let projectPath;
 
     // Open .llc AND media referenced within
-    if (isLlcProject) {
+    /* if (isLlcProject) {
       console.log('Loading LLC project', path);
       const project = await loadLlcProject(path);
       const { mediaFileName } = project;
@@ -1540,6 +1544,7 @@ const App = memo(() => {
       projectPath = path;
       path = pathJoin(dirname(path), mediaFileName);
     }
+    */
     // Because Apple is being nazi about the ability to open "copy protected DVD files"
     const disallowVob = isMasBuild;
     if (disallowVob && /\.vob$/i.test(path)) {
@@ -1847,12 +1852,14 @@ const App = memo(() => {
 
     async function exportEdlFile2(e, type) {
       if (!checkFileOpened()) return;
+      /*
       try {
         await exportEdlFile({ type, cutSegments, filePath });
       } catch (err) {
         errorToast(i18n.t('Failed to export project'));
         console.error('Failed to export project', type, err);
       }
+      */
     }
 
     async function exportEdlYouTube() {
@@ -1864,12 +1871,13 @@ const App = memo(() => {
     async function importEdlFile(e, type) {
       if (!checkFileOpened()) return;
 
-      try {
+     /* try {
         const edl = await readEdl(type);
         if (edl.length > 0) loadCutSegments(edl);
       } catch (err) {
         handleError(err);
       }
+    */
     }
 
     async function batchConvertFriendlyFormat() {
@@ -2542,6 +2550,7 @@ const App = memo(() => {
               renderCaptureFormatButton={renderCaptureFormatButton}
               capture={capture}
               onExportPress={onExportPress}
+              onExportConfirm={onExportConfirm}
               enabledOutSegments={enabledOutSegments}
               exportConfirmEnabled={exportConfirmEnabled}
               toggleExportConfirmEnabled={toggleExportConfirmEnabled}

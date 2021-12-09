@@ -384,8 +384,8 @@ export async function extractStreams({ filePath, customOutDir, streams }) {
   // TODO progress
 
   // Attachment streams are handled differently from normal streams
-  await extractNonAttachmentStreams({ customOutDir, filePath, streams: outStreams });
-  await extractAttachmentStreams({ customOutDir, filePath, streams: attachmentStreams });
+  // await extractNonAttachmentStreams({ customOutDir, filePath, streams: outStreams });
+  // await extractAttachmentStreams({ customOutDir, filePath, streams: attachmentStreams });
 }
 
 async function renderThumbnail(filePath, timestamp) {

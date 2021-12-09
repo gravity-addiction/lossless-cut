@@ -1,5 +1,5 @@
 import { Select } from 'evergreen-ui';
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo, useCallback, useEffect, useState } from 'react';
 import { IoIosCamera } from 'react-icons/io';
 import { FaTrashAlt } from 'react-icons/fa';
 import { MdRotate90DegreesCcw } from 'react-icons/md';
@@ -17,7 +17,7 @@ import ToggleExportConfirm from './components/ToggleExportConfirm';
 const RightMenu = memo(({
   isRotationSet, rotation, increaseRotation, cleanupFiles, renderCaptureFormatButton,
   capture, onExportPress, enabledOutSegments, hasVideo, exportConfirmEnabled, toggleExportConfirmEnabled,
-  simpleMode, onSdobSetExitPress, onSdobSetSlatePress,
+  simpleMode, onSdobSetExitPress, onSdobSetSlatePress, onExportConfirm
 }) => {
   const rotationStr = `${rotation}°`;
 
@@ -40,19 +40,18 @@ const RightMenu = memo(({
     }
   };
 
-  const changedComp = (id) => {
-    if (!Array.isArray(compList)) {
+  const changedComp = (cList, id) => {
+    if (!Array.isArray(cList)) {
       return;
     }
     // Find Comp
-    const compInd = compList.findIndex((comp) => String(comp.id) === String(id));
+    const compInd = cList.findIndex((comp) => String(comp.id) === String(id));
     if (compInd > -1) {
-      if (!Array.isArray(compList[compInd].teams)) {
+      if (!Array.isArray(cList[compInd].teams)) {
         return;
       }
-      console.log('Set Teams');
-      let teams = compList[compInd].teams || [];
-      teams = teams.sort((a, b) => (Number(a.teamNumber) > Number(b.teamNumber)) ? 1 : -1);
+      let teams = cList[compInd].teams || [];
+      teams = teams.sort((a, b) => (Number(a.teamNumber) > Number(b.teamNumber) ? 1 : -1));
       setTeamList(teams);
       if (teams && teams.length) {
         changedTeam(teams[0].id);
@@ -62,7 +61,7 @@ const RightMenu = memo(({
 
 
   const changedCompClick = (event) => {
-    changedComp(event.target.value);
+    changedComp(compList, event.target.value);
   };
 
   const changedTeamClick = (event) => {
@@ -76,10 +75,10 @@ const RightMenu = memo(({
         if (Array.isArray(compListResp.comps)) {
           console.log('Comp List', compListResp.comps);
           setCompList(compListResp.comps || []);
-          changedComp(((compListResp.comps || [])[0] || {}).id);
+          changedComp(compListResp.comps || [], ((compListResp.comps || [])[0] || {}).id);
         }
       });
-  });
+  }, []);
 
   return (
     <div className="no-user-select" style={{ padding: '.3em', flex: 10, display: 'flex', alignItems: 'center' }}>
@@ -147,7 +146,7 @@ const RightMenu = memo(({
 
           <SdobExportButton
             enabledOutSegments={enabledOutSegments}
-            onClick={onExportPress}
+            onClick={onExportConfirm}
           />
 
           <IoIosCamera
