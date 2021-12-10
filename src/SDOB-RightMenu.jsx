@@ -68,6 +68,7 @@ const RightMenu = memo(({
     changedTeam(event.target.value);
   };
 
+  /*
   useEffect(() => {
     fetch('https://dev.skydiveorbust.com/api/latest/events/2020_cf_ghost_nationals/comps')
       .then(res => res.json())
@@ -79,7 +80,7 @@ const RightMenu = memo(({
         }
       });
   }, []);
-
+  */
   return (
     <div className="no-user-select" style={{ padding: '.3em', flex: 10, display: 'flex', alignItems: 'center' }}>
 
