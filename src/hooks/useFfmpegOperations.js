@@ -272,7 +272,7 @@ function useFfmpegOperations({ filePath, enableTransferTimestamps }) {
 
   const autoMergeSegments = useCallback(async ({ customOutDir, isCustomFormatSelected, outFormat, segmentPaths, ffmpegExperimental, onProgress, preserveMovData, movFastStart, autoDeleteMergedSegments, chapterNames, preserveMetadataOnMerge }) => {
     const ext = getOutFileExtension({ isCustomFormatSelected, outFormat, filePath });
-    const fileName = `cut-merged-${new Date().getTime()}${ext}`;
+    const fileName = `${new Date().getTime()}${ext}`;
     const outPath = getOutPath(customOutDir, filePath, fileName);
     const outDir = getOutDir(customOutDir, filePath);
 
@@ -280,6 +280,7 @@ function useFfmpegOperations({ filePath, enableTransferTimestamps }) {
 
     await mergeFiles({ paths: segmentPaths, outDir, outPath, outFormat, allStreams: true, ffmpegExperimental, onProgress, preserveMovData, movFastStart, chapters, preserveMetadataOnMerge });
     if (autoDeleteMergedSegments) await pMap(segmentPaths, path => fs.unlink(path), { concurrency: 5 });
+    return {outDir, outPath, outFormat};
   }, [filePath, mergeFiles]);
 
   const html5ify = useCallback(async ({ filePath: specificFilePath, outPath, video, audio, onProgress }) => {

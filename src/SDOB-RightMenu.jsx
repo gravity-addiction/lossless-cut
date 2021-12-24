@@ -17,7 +17,7 @@ import ToggleExportConfirm from './components/ToggleExportConfirm';
 const RightMenu = memo(({
   isRotationSet, rotation, increaseRotation, cleanupFiles, renderCaptureFormatButton,
   capture, onExportPress, enabledOutSegments, hasVideo, exportConfirmEnabled, toggleExportConfirmEnabled,
-  simpleMode, onSdobSetExitPress, onSdobSetSlatePress, onExportConfirm
+  simpleMode, onSdobSetExitPress, onSdobSetSlatePress, onExportConfirm, setSelectedComp, setSelectedTeam, setSelectedRound
 }) => {
   const rotationStr = `${rotation}°`;
 
@@ -27,16 +27,28 @@ const RightMenu = memo(({
   const [teamList, setTeamList] = useState([]);
   const [roundList, setRoundList] = useState([]);
 
-
-  const changedTeam = (id) => {
-    if (!Array.isArray(teamList)) {
+  const changedRound = (cList, roundNum) => {
+    if (!Array.isArray(cList)) {
       return;
     }
     // Find Team
-    const teamInd = teamList.findIndex((team) => String(team.id) === String(id));
+    const roundInd = cList.findIndex((round) => String(round.roundNum) === String(roundNum));
+    if (roundInd > -1) {
+      console.log('SETTING ROUND', cList[roundInd]);
+      setSelectedRound(cList[roundInd]);
+    }    
+  };
+
+  const changedTeam = (cList, id) => {
+    if (!Array.isArray(cList)) {
+      return;
+    }
+    // Find Team
+    const teamInd = cList.findIndex((team) => String(team.id) === String(id));
     if (teamInd > -1) {
+      console.log('SETTING TEAM', cList[teamInd]);
+      setSelectedTeam(cList[teamInd]);
       // setTeamList((compList[compInd].teams || []).sort((a, b) => (Number(a.teamNumber) > Number(b.teamNumber)) ? 1 : -1));
-      setRoundList([{ i: 0, roundNum: '1' }, { i: 1, roundNum: '2' }, { i: 2, roundNum: '3' }]);
     }
   };
 
@@ -47,6 +59,20 @@ const RightMenu = memo(({
     // Find Comp
     const compInd = cList.findIndex((comp) => String(comp.id) === String(id));
     if (compInd > -1) {
+      setSelectedComp(cList[compInd]);
+
+      // Setup rounds
+      const roundArray = [];
+      for (let r = 0; r < (cList[compInd].roundCnt || 0); r++) {
+        roundArray.push({ i: r, roundNum: String(r + 1) });
+      }
+      for (let r = 0; r < (cList[compInd].exRoundCnt || 0); r++) {
+        roundArray.push({ i: r, roundNum: `${cList[compInd].exRoundPre}${String(r + 1)}` });
+      }
+      setRoundList(roundArray);
+      setSelectedRound(roundArray[0] || null);
+
+      // Setup Teams
       if (!Array.isArray(cList[compInd].teams)) {
         return;
       }
@@ -54,8 +80,9 @@ const RightMenu = memo(({
       teams = teams.sort((a, b) => (Number(a.teamNumber) > Number(b.teamNumber) ? 1 : -1));
       setTeamList(teams);
       if (teams && teams.length) {
-        changedTeam(teams[0].id);
+        changedTeam(teams, teams[0].id);
       }
+
     }
   };
 
@@ -65,12 +92,17 @@ const RightMenu = memo(({
   };
 
   const changedTeamClick = (event) => {
-    changedTeam(event.target.value);
+    changedTeam(teamList, event.target.value);
   };
 
-  /*
+  const changedRoundClick = (event) => {
+    changedRound(roundList, event.target.value);
+  };  
+
+  
   useEffect(() => {
-    fetch('https://dev.skydiveorbust.com/api/latest/events/2020_cf_ghost_nationals/comps')
+    console.log('Fetching Info');
+    fetch('https://api.thegarybox.com/api/latest/events/2019_uspa_collegiate_nationals/comps')
       .then(res => res.json())
       .then((compListResp) => {
         if (Array.isArray(compListResp.comps)) {
@@ -80,7 +112,7 @@ const RightMenu = memo(({
         }
       });
   }, []);
-  */
+  
   return (
     <div className="no-user-select" style={{ padding: '.3em', flex: 10, display: 'flex', alignItems: 'center' }}>
 
@@ -123,7 +155,7 @@ const RightMenu = memo(({
         </Select>
 
 
-        <Select width="100%" height={50} size={500} style={{ minWidth: 40, flex: 1, right: '10px', fontSize: 18 }}>
+        <Select width="100%" height={50} size={500} style={{ minWidth: 40, flex: 1, right: '10px', fontSize: 18 }} onChange={changedRoundClick}>
           <option key="" value="" disabled>Select Round</option>
           {roundList.map(val => (
             <option key={val.i} value={String(val.roundNum)}>{String(val.roundNum)}</option>

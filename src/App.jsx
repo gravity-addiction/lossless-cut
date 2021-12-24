@@ -13,6 +13,9 @@ import i18n from 'i18next';
 import { useTranslation } from 'react-i18next';
 import Mousetrap from 'mousetrap';
 import JSON5 from 'json5';
+const fs = window.require('fs-extra');
+const request = window.require('request');
+const https = window.require('https');
 
 import fromPairs from 'lodash/fromPairs';
 import clamp from 'lodash/clamp';
@@ -162,6 +165,11 @@ const App = memo(() => {
     createInitialCutSegments(),
     100,
   );
+
+  // Skydive or Bust state
+  const [selectedComp, setSelectedComp] = useState();
+  const [selectedTeam, setSelectedTeam] = useState();
+  const [selectedRound, setSelectedRound] = useState();
 
   // Store "working" in a ref so we can avoid race conditions
   const workingRef = useRef(working);
@@ -928,7 +936,7 @@ const App = memo(() => {
 
     setPreviewFilePath(path);
     setUsingDummyVideo(usesDummyVideo);
-    showUnsupportedFileMessage();
+    // showUnsupportedFileMessage();
   }, [html5ify, html5ifyDummy, showUnsupportedFileMessage]);
 
   const showPlaybackFailedMessage = () => errorToast(i18n.t('Unable to playback this file. Try to convert to supported format from the menu'));
@@ -1117,7 +1125,7 @@ const App = memo(() => {
     try {
       console.log('File', filePath);
       const ext = getOutFileExtension({ isCustomFormatSelected, outFormat: fileFormat, filePath });
-      copySource({ source: filePath, outPath: outputDir + '/test.' + ext });
+      // copySource({ source: filePath, outPath: outputDir + '/test' + ext });
       setWorking(i18n.t('Exporting'));
 
       console.log('outSegTemplateOrDefault', outSegTemplateOrDefault);
@@ -1150,13 +1158,14 @@ const App = memo(() => {
         dispositionByStreamId,
       });
 
+      let submitFile = '';
       if (outFiles.length > 1 && autoMerge) {
         setCutProgress(0);
         setWorking(i18n.t('Merging'));
 
         const chapterNames = segmentsToChapters && !invertCutSegments ? enabledOutSegments.map((s) => s.name) : undefined;
 
-        await autoMergeSegments({
+        submitFile = await autoMergeSegments({
           customOutDir,
           outFormat: fileFormat,
           isCustomFormatSelected,
@@ -1169,8 +1178,49 @@ const App = memo(() => {
           autoDeleteMergedSegments,
           preserveMetadataOnMerge,
         });
+        console.log('Submit File to Server', submitFile);
+
+      } else if (outFiles.length === 1) {
+        console.log('Submit Single', outFiles);
+        submitFile = outFiles[0];
       }
 
+      if (submitFile) {
+        const agentOptions = {
+          host: 'transq.thegarybox.com'
+        , port: '443'
+        , path: '/upload'
+        , rejectUnauthorized: false
+        };
+
+        const agent = new https.Agent(agentOptions);
+
+        const options = {
+          method: "POST",
+          url: "https://transq.thegarybox.com/upload",
+          port: 443,
+          agent,
+          headers: {
+              // "Authorization": "Basic " + auth,
+              "Content-Type": "multipart/form-data"
+          },
+          formData : {
+              "file1": fs.createReadStream(submitFile),
+              "file1.event": "uspa-collegiate-2019",
+              "file1.comp_id": selectedComp.id || 0,
+              "file1.team_id": selectedTeam.id || 0,
+              "file1.round": selectedRound.roundNum || 0
+          }
+        };
+
+        request(options, function (err, res, body) {
+          if(err) console.log(err);
+          console.log(body);
+        });
+      }
+      console.log('Comp', selectedComp);
+      console.log('Team', selectedTeam);
+      console.log('Round', selectedRound);
       const msgs = [
       //  i18n.t('Done! Note: cutpoints may be inaccurate. Make sure you test the output files in your desired player/editor before you delete the source. If output does not look right, see the HELP page.')
       ];
@@ -2566,6 +2616,9 @@ const App = memo(() => {
               simpleMode={simpleMode}
               onSdobSetSlatePress={onSdobSetSlatePress}
               onSdobSetExitPress={onSdobSetExitPress}
+              setSelectedComp={setSelectedComp}
+              setSelectedTeam={setSelectedTeam}
+              setSelectedRound={setSelectedRound}
             />
           </div>
         </motion.div>

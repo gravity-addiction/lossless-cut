@@ -1,2 +1,2 @@
 #!/bin/sh
-/usr/bin/rsync -avz --progress ./src/* leroy@leroy.local:~/Downloads/lossless-cut/src/
+/usr/bin/rsync -avz --progress ./src/* astro@astro.local:~/Downloads/lossless-cut/src/
