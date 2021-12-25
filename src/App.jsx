@@ -1182,7 +1182,7 @@ const App = memo(() => {
 
       } else if (outFiles.length === 1) {
         console.log('Submit Single', outFiles);
-        submitFile = outFiles[0];
+        submitFile = { outPath: outFiles[0] };
       }
 
       if (submitFile) {
@@ -1205,7 +1205,7 @@ const App = memo(() => {
               "Content-Type": "multipart/form-data"
           },
           formData : {
-              "file1": fs.createReadStream(submitFile),
+              "file1": fs.createReadStream(submitFile.outPath),
               "file1.event": "uspa-collegiate-2019",
               "file1.comp_id": selectedComp.id || 0,
               "file1.team_id": selectedTeam.id || 0,
