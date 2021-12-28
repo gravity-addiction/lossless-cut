@@ -1216,6 +1216,7 @@ const App = memo(() => {
         request(options, function (err, res, body) {
           if(err) console.log(err);
           console.log(body);
+          closeFile();
         });
       }
       console.log('Comp', selectedComp);
