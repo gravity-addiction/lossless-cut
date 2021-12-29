@@ -102,7 +102,7 @@ const RightMenu = memo(({
   
   useEffect(() => {
     console.log('Fetching Info');
-    fetch('https://api.thegarybox.com/api/latest/events/2019_uspa_collegiate_nationals/comps')
+    fetch('https://api.thegarybox.com/api/latest/events/2021_uspa_collegiate_nationals/comps')
       .then(res => res.json())
       .then((compListResp) => {
         if (Array.isArray(compListResp.comps)) {

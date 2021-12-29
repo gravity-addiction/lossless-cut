@@ -1206,7 +1206,7 @@ const App = memo(() => {
           },
           formData : {
               "file1": fs.createReadStream(submitFile.outPath),
-              "file1.event": "uspa-collegiate-2019",
+              "file1.event": "uspa-collegiate-2021",
               "file1.comp_id": selectedComp.id || 0,
               "file1.team_id": selectedTeam.id || 0,
               "file1.round": selectedRound.roundNum || 0
