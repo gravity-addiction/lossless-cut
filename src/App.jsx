@@ -2159,7 +2159,7 @@ const App = memo(() => {
       const curTime = currentTimeRef.current;
       const cutSegmentsNew = [
         ...cutSegments,
-        createSegment({ start: Math.min(Math.max(curTime - 5, 0), duration), end: Math.min(Math.max(curTime + 30, 0), duration) }),
+        createSegment({ start: Math.min(Math.max(curTime - 5, 0), duration), end: Math.min(Math.max(curTime + 50, 0), duration) }),
       ];
 
       setCutSegments(cutSegmentsNew);
