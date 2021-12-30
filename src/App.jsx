@@ -1125,6 +1125,12 @@ const App = memo(() => {
     try {
       console.log('File', filePath);
       const ext = getOutFileExtension({ isCustomFormatSelected, outFormat: fileFormat, filePath });
+
+      setWorking(i18n.t('Copying'));
+      const outSource = `${customOutDir}/original/${selectedComp.id || 0}-${selectedTeam.id || 0}-${selectedRound.roundNum || 0}-${new Date().getTime()}${ext}`;
+      await copySource({ source: filePath, outPath: outSource, onProgress: setCutProgress });
+
+      
       setWorking(i18n.t('Exporting'));
 
       console.log('outSegTemplateOrDefault', outSegTemplateOrDefault);
@@ -1177,12 +1183,9 @@ const App = memo(() => {
           autoDeleteMergedSegments,
           preserveMetadataOnMerge,
         });
-        console.log('Submit File to Server', submitFile);
-
       } else if (outFiles.length === 1) {
         console.log('Submit Single', outFiles);
         submitFile = { outPath: outFiles[0] };
-        copySource({ source: filePath, outPath: customOutDir + '/original/' + outFiles[0] });
       }
 
       if (submitFile) {
@@ -1213,11 +1216,11 @@ const App = memo(() => {
           }
         };
 
+
         request(options, function (err, res, body) {
           if(err) console.log(err);
-          console.log(body);
-          closeFile();
         });
+        resetState();
       }
       console.log('Comp', selectedComp);
       console.log('Team', selectedTeam);
