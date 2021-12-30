@@ -1125,7 +1125,6 @@ const App = memo(() => {
     try {
       console.log('File', filePath);
       const ext = getOutFileExtension({ isCustomFormatSelected, outFormat: fileFormat, filePath });
-      // copySource({ source: filePath, outPath: outputDir + '/test' + ext });
       setWorking(i18n.t('Exporting'));
 
       console.log('outSegTemplateOrDefault', outSegTemplateOrDefault);
@@ -1183,6 +1182,7 @@ const App = memo(() => {
       } else if (outFiles.length === 1) {
         console.log('Submit Single', outFiles);
         submitFile = { outPath: outFiles[0] };
+        copySource({ source: filePath, outPath: customOutDir + '/original/' + outFiles[0] });
       }
 
       if (submitFile) {
