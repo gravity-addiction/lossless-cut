@@ -5,7 +5,7 @@ import { IoMdKey } from 'react-icons/io';
 import { useTranslation } from 'react-i18next';
 // import useTraceUpdate from 'use-trace-update';
 
-import { getSegColors } from './util/colors';
+import { getSegColor } from './util/colors';
 import { formatDuration, parseDuration } from './util/duration';
 import { primaryTextColor } from './colors';
 import SetCutpointButton from './components/SetCutpointButton';
@@ -29,7 +29,7 @@ const TimelineControls = memo(({
     let segButtonStyle;
 
     if (seg) {
-      const { segActiveBgColor, segBorderColor } = getSegColors(seg);
+      const { segActiveBgColor, segBorderColor } = getSegColor(seg);
       segButtonStyle = getSegButtonStyle({ segActiveBgColor, segBorderColor });
     } else {
       segButtonStyle = getSegButtonStyle({ segActiveBgColor: 'rgba(255,255,255,0.3)', segBorderColor: 'rgba(255,255,255,0.5)' });

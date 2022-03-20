@@ -1,7 +1,9 @@
-import fs from 'fs';
+import fs from 'fs/promises';
 import { join } from 'path';
 
-import { parseYouTube, formatYouTube, parseMplayerEdl } from './edlFormats';
+import { parseYouTube, formatYouTube, parseMplayerEdl, parseXmeml, parseCsv, getTimeFromFrameNum, formatCsvFrames, getFrameCountRaw, parsePbf } from './edlFormats';
+
+const readFixture = async (name, encoding = 'utf-8') => fs.readFile(join(__dirname, 'fixtures', name), encoding);
 
 it('parseYoutube', () => {
   const str = `
@@ -83,7 +85,7 @@ it('parseMplayerEdl', async () => {
 `;
 */
 
-  const str = await fs.promises.readFile(join(__dirname, 'fixtures', 'mplayer.edl'), 'utf-8');
+  const str = await readFixture('mplayer.edl');
 
   expect(await parseMplayerEdl(str)).toEqual([
     { start: 0,
@@ -128,4 +130,45 @@ it('parseMplayerEdl, starting at 0', async () => {
       mplayerEdlType: 0,
     },
   }]);
+});
+
+it('parses xmeml 1', async () => {
+  expect(await parseXmeml(await readFixture('Final Cut Pro XMEML.xml'))).toMatchSnapshot();
+});
+
+it('parses xmeml 2', async () => {
+  expect(await parseXmeml(await readFixture('Final Cut Pro XMEML 2.xml'))).toMatchSnapshot();
+});
+
+// https://github.com/mifi/lossless-cut/issues/1024
+const csvFramesStr = `\
+0,155,EP106_SQ010_SH0010
+156,251,EP106_SQ010_SH0020
+252,687,EP106_SQ010_SH0030
+688,747,EP106_SQ020_SH0010
+`;
+
+it('parses csv with frames', async () => {
+  const fps = 30;
+  const parsed = await parseCsv(csvFramesStr, (frameCount) => getTimeFromFrameNum(fps, frameCount));
+
+  expect(parsed).toEqual([
+    { end: 5.166666666666667, name: 'EP106_SQ010_SH0010', start: 0 },
+    { end: 8.366666666666667, name: 'EP106_SQ010_SH0020', start: 5.2 },
+    { end: 22.9, name: 'EP106_SQ010_SH0030', start: 8.4 },
+    { end: 24.9, name: 'EP106_SQ020_SH0010', start: 22.933333333333334 },
+  ]);
+
+  const formatted = await formatCsvFrames({
+    cutSegments: parsed,
+    getFrameCount: (sec) => getFrameCountRaw(fps, sec),
+  });
+  expect(formatted).toEqual(csvFramesStr);
+});
+
+it('parses pbf', async () => {
+  expect(parsePbf(await readFixture('test1.pbf', null))).toMatchSnapshot();
+  expect(parsePbf(await readFixture('test2.pbf', null))).toMatchSnapshot();
+  expect(parsePbf(await readFixture('test3.pbf', null))).toMatchSnapshot();
+  expect(parsePbf(await readFixture('potplayer bookmark format utf16le issue 867.pbf', null))).toMatchSnapshot();
 });

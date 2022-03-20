@@ -1,7 +1,7 @@
 ## Development building / running
 
 This app is built using Electron.
-Make sure you have at least Node v12. The app uses ffmpeg from PATH when developing.
+Make sure you have at least Node v14. The app uses ffmpeg from PATH when developing.
 
 ```bash
 npm install -g yarn
@@ -21,11 +21,21 @@ npm run download-ffmpeg # on MacOS only
 npm start
 ```
 
+## Testing mas-dev build locally
+
+This will sign using the development provisioning profile:
+
+```
+npm run pack-mas-dev
+```
+
 ## Release
+
+For per-platform build/signing setup, see https://blog.mifi.no/2020/03/31/automated-electron-build-with-release-to-mac-app-store-microsoft-store-snapcraft/
 
 ### Release new version
 
-- Commit changed
+- Commit changes
 - `npm version ...`
 - `git push && git push --tags`
 - Wait for build and draft in Github actions
@@ -33,15 +43,28 @@ npm start
 - Bump [snap version](https://snapcraft.io/losslesscut/listing)
 - `npm run scan-i18n` to get the newest Englist strings and push so weblate gets them
 
+## Maintainence chores
 
-## Source Copy progress bar
+### Keep dependencies up to date
+- ffmpeg
+- electron
+- package.json
+
+### i18n
+`npm run scan-i18n`
+
+### Licenses
+
+#### Generate summary
+
 ```
-cd ~/Downloads
-wget http://ftp.gnu.org/gnu/coreutils/coreutils-8.32.tar.xz
-tar xvJf coreutils-8.32.tar.xz
-cd coreutils-8.32/
-patch -p1 -i ../lossless-cut/patches/advcpmv-0.8-8.32.patch
-./configure
-make
+npx license-checker --summary
 ```
-cp and mv files are patched
+
+#### Regenerate licenses file
+
+```
+npm run generate-licenses
+#cp licenses.txt mifi.no/public/losslesscut/
+```
+Then deploy.

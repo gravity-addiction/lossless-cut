@@ -90,19 +90,19 @@ const RightMenu = memo(({
   };
 
 
-  const changedCompClick = (event) => {
+  const sdobChangedCompClick = (event) => {
     changedComp(compList, event.target.value);
   };
 
-  const changedTeamClick = (event) => {
+  const sdobChangedTeamClick = (event) => {
     changedTeam(teamList, event.target.value);
   };
 
-  const changedRoundClick = (event) => {
+  const sdobChangedRoundClick = (event) => {
     changedRound(roundList, event.target.value);
   };  
 
-  const selectTeamOpenClick = (event) => {
+  const sdobSelectTeamOpenClick = (event) => {
     setExportConfirmVisible(true)
   };
   
@@ -160,8 +160,8 @@ const RightMenu = memo(({
       
       <SdobTeamConfirm visible={sdobTeamConfirmVisible} 
         onClosePress={closeSdobTeamConfirm} onSdobTeamConfirm={onSdobTeamConfirm} 
-        compList={compList} teamList={teamList} roundList={roundList}
-        changedCompClick={changedCompClick}
+        sdobCompList={sdobCompList} sdobTeamList={sdobTeamList} sdobRoundList={sdobRoundList}
+        sdobChangedCompClick={sdobChangedCompClick}
       />
 
       {hasVideo && (
