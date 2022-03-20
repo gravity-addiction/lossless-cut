@@ -13,9 +13,7 @@ import i18n from 'i18next';
 import { useTranslation } from 'react-i18next';
 import Mousetrap from 'mousetrap';
 import JSON5 from 'json5';
-const fs = window.require('fs-extra');
-const request = window.require('request');
-const https = window.require('https');
+
 
 import fromPairs from 'lodash/fromPairs';
 import clamp from 'lodash/clamp';
@@ -73,6 +71,9 @@ import { createSegment, createInitialCutSegments, getCleanCutSegments, getSegApp
 
 import loadingLottie from './7077-magic-flow.json';
 
+const fs = window.require('fs-extra');
+const request = window.require('request');
+const https = window.require('https');
 
 function getHtml5ifiedPath(cod, fp, type) {
   // See also inside ffmpegHtml5ify
