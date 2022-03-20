@@ -61,3 +61,33 @@ kbd {
   align-items: flex-start !important;
   text-align: left;
 }
+
+
+.sdob-team-selection-container {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+}
+
+.sdob-team-selection-container:nth-child(odd) {
+  background-color: rgba(128, 128, 128, 1);
+}
+
+.sdob-team-selection-item {
+  flex: 0 auto;
+  height: auto;
+  margin: 1%;
+  min-width: 50px;
+  min-height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+
+.sdob-team-selection-name {
+  font-size: 20px;
+  width: 250px;
+  justify-content: left;
+}

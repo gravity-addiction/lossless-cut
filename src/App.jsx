@@ -43,7 +43,6 @@ import Timeline from './Timeline';
 import RightMenu from './SDOB-RightMenu';
 import TimelineControls from './SDOB-TimelineControls';
 import ExportConfirm from './SDOB-ExportConfirm';
-// import ExportConfirm from './ExportConfirm';
 import ValueTuner from './components/ValueTuner';
 import VolumeControl from './components/VolumeControl';
 import SubtitleControl from './components/SubtitleControl';
@@ -208,6 +207,7 @@ const App = memo(() => {
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [tunerVisible, setTunerVisible] = useState();
   const [exportConfirmVisible, setExportConfirmVisible] = useState(false);
+  const [sdobTeamConfirmVisible, setSdobTeamConfirmVisible] = useState(true);
   const [mifiLink, setMifiLink] = useState();
 
   const videoRef = useRef();
@@ -869,6 +869,7 @@ const App = memo(() => {
       setActiveSubtitleStreamIndex();
 
       setExportConfirmVisible(false);
+      setSdobTeamConfirmVisible(false);
 
       setThumbnails([]);
       cancelRenderThumbnails();
@@ -1206,7 +1207,7 @@ const App = memo(() => {
           },
           formData : {
               "file1": fs.createReadStream(submitFile.outPath),
-              "file1.event": "uspa-collegiate-2021",
+              "file1.event": "perris-fresh-meet-2020",
               "file1.comp_id": selectedComp.id || 0,
               "file1.team_id": selectedTeam.id || 0,
               "file1.round": selectedRound.roundNum || 0
@@ -1282,7 +1283,7 @@ const App = memo(() => {
     if (working || !filePath || !isDurationValid(duration)) {
       return;
     }
-    console.log('Setting Slate', filePath);
+
     try {
       setCurrentSegIndex(0);
       const curTime = currentTimeRef.current;
@@ -1296,7 +1297,7 @@ const App = memo(() => {
     if (working || !filePath || !isDurationValid(duration)) {
       return;
     }
-    console.log('Setting Exit');
+
     try {
       setCurrentSegIndex(1);
       const curTime = currentTimeRef.current;
@@ -1305,6 +1306,13 @@ const App = memo(() => {
       errorToast(err.message);
     }
   }, [working, filePath, duration, updateSegAtIndex]);
+
+  const closeSdobTeamConfirm = useCallback(() => setSdobTeamConfirmVisible(false), []);
+
+  const onSdobTeamConfirm = useCallback(async () => {
+    errorToast('Selected Team');
+    
+  });
 
   const capture = useCallback(async () => {
     if (!filePath) return;
@@ -2620,6 +2628,13 @@ const App = memo(() => {
               setSelectedComp={setSelectedComp}
               setSelectedTeam={setSelectedTeam}
               setSelectedRound={setSelectedRound}
+              selectedComp={selectedComp}
+              selectedTeam={selectedTeam}
+              selectedRound={selectedRound}
+              setSdobTeamConfirmVisible={setSdobTeamConfirmVisible}
+              sdobTeamConfirmVisible={sdobTeamConfirmVisible}
+              onSdobTeamConfirm={onSdobTeamConfirm}
+              closeSdobTeamConfirm={closeSdobTeamConfirm}
             />
           </div>
         </motion.div>

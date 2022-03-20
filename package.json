@@ -110,6 +110,7 @@
     "mousetrap": "^1.6.5",
     "open": "^7.0.3",
     "read-chunk": "^2.0.0",
+    "request": "^2.88.2",
     "semver": "^7.1.3",
     "string-to-stream": "^1.1.1",
     "strtok3": "^6.0.0",
@@ -139,12 +140,13 @@
     "asar": {
       "smartUnpack": false
     },
-    "appId": "no.mifi.losslesscut",
+    "appId": "com.skydiveorbust.losslesscut-mac",
     "artifactName": "${productName}-${os}.${ext}",
     "afterSign": "electron-builder-notarize",
     "mac": {
       "hardenedRuntime": true,
-      "appId": "no.mifi.losslesscut-mac",
+      "gatekeeperAssess": false,
+      "appId": "com.skydiveorbust.losslesscut-mac",
       "category": "public.app-category.productivity",
       "target": [
         "mas",

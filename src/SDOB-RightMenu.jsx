@@ -12,12 +12,15 @@ import SdobExportButton from './components/SdobExportButton';
 import SdobSetExitButton from './components/SdobSetExitButton';
 import SdobSetSlateButton from './components/SdobSetSlateButton';
 import ToggleExportConfirm from './components/ToggleExportConfirm';
-
+import SdobTeamConfirm from './SDOB-TeamConfirm';
+import { primaryColor } from './colors';
 
 const RightMenu = memo(({
   isRotationSet, rotation, increaseRotation, cleanupFiles, renderCaptureFormatButton,
   capture, onExportPress, enabledOutSegments, hasVideo, exportConfirmEnabled, toggleExportConfirmEnabled,
-  simpleMode, onSdobSetExitPress, onSdobSetSlatePress, onExportConfirm, setSelectedComp, setSelectedTeam, setSelectedRound
+  simpleMode, onSdobSetExitPress, onSdobSetSlatePress, onExportConfirm, 
+  setSelectedComp, setSelectedTeam, setSelectedRound, selectedComp, selectedTeam, selectedRound,
+  setExportConfirmVisible, setSdobTeamConfirmVisible, sdobTeamConfirmVisible, onSdobTeamConfirm, closeSdobTeamConfirm,
 }) => {
   const rotationStr = `${rotation}°`;
 
@@ -99,10 +102,13 @@ const RightMenu = memo(({
     changedRound(roundList, event.target.value);
   };  
 
+  const selectTeamOpenClick = (event) => {
+    setExportConfirmVisible(true)
+  };
   
   useEffect(() => {
     console.log('Fetching Info');
-    fetch('https://api.thegarybox.com/api/latest/events/2021_uspa_collegiate_nationals/comps')
+    fetch('https://api.thegarybox.com/api/latest/events/2022_perris_fresh_meet/comps')
       .then(res => res.json())
       .then((compListResp) => {
         if (Array.isArray(compListResp.comps)) {
@@ -140,28 +146,23 @@ const RightMenu = memo(({
       )}
 
       <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', height: 60 }}>
-        <Select width="100%" height={50} style={{ minWidth: 120, flex: 3, right: '10px', fontSize: 18 }} onChange={changedCompClick}>
-          <option key="" value="" disabled>Select Comp</option>
-          {compList.map(val => (
-            <option key={val.id} value={String(val.id)}>{String(val.name)} {String(val.class)}</option>
-          ))}
-        </Select>
-
-        <Select width="100%" height={50} size={500} style={{ minWidth: 120, flex: 3, right: '10px', fontSize: 18 }} onChange={changedTeamClick}>
-          <option key="" value="" disabled>Select Team</option>
-          {teamList.map(val => (
-            <option key={val.id} value={String(val.id)}>{String(val.teamNumber)} {String(val.name)}</option>
-          ))}
-        </Select>
-
-
-        <Select width="100%" height={50} size={500} style={{ minWidth: 40, flex: 1, right: '10px', fontSize: 18 }} onChange={changedRoundClick}>
-          <option key="" value="" disabled>Select Round</option>
-          {roundList.map(val => (
-            <option key={val.i} value={String(val.roundNum)}>{String(val.roundNum)}</option>
-          ))}
-        </Select>
+        { selectedComp?.name } { selectedTeam?.name } { selectedRound?.roundNum }
       </div>
+      
+      <div
+        style={{ cursor: 'pointer', background: primaryColor, borderRadius: 5, paddingTop: 1, paddingBottom: 2.5, paddingLeft: 7, paddingRight: 7, fontSize: 13 }}
+        onClick={setSdobTeamConfirmVisible}
+        title='Show Team Selection'
+        role="button"
+      >
+        Select Team
+      </div>
+      
+      <SdobTeamConfirm visible={sdobTeamConfirmVisible} 
+        onClosePress={closeSdobTeamConfirm} onSdobTeamConfirm={onSdobTeamConfirm} 
+        compList={compList} teamList={teamList} roundList={roundList}
+        changedCompClick={changedCompClick}
+      />
 
       {hasVideo && (
         <>
@@ -181,6 +182,7 @@ const RightMenu = memo(({
             enabledOutSegments={enabledOutSegments}
             onClick={onExportConfirm}
           />
+          
 
           <IoIosCamera
             size={25}
