@@ -1,6 +1,6 @@
 import React, { memo, useCallback, useMemo } from 'react';
 import { FaYinYang, FaKeyboard } from 'react-icons/fa';
-import { CogIcon, Button, Table, NumericalIcon, KeyIcon, FolderCloseIcon, DocumentIcon, TimeIcon, Checkbox, Select } from 'evergreen-ui';
+import { CogIcon, Button, Table, NumericalIcon, KeyIcon, FolderCloseIcon, DocumentIcon, TimeIcon, Checkbox, Select, TextInputField } from 'evergreen-ui';
 import { useTranslation } from 'react-i18next';
 
 import CaptureFormatButton from './components/CaptureFormatButton';
@@ -44,10 +44,12 @@ const KeyCell = (props) => <Table.TextCell textProps={{ whiteSpace: 'auto' }} {.
 const Settings = memo(({
   onTunerRequested,
   onKeyboardShortcutsDialogRequested,
+  sdob,
+  sdobEventList
 }) => {
   const { t } = useTranslation();
 
-  const { customOutDir, changeOutDir, keyframeCut, toggleKeyframeCut, timecodeFormat, setTimecodeFormat, invertCutSegments, setInvertCutSegments, askBeforeClose, setAskBeforeClose, enableAskForImportChapters, setEnableAskForImportChapters, enableAskForFileOpenAction, setEnableAskForFileOpenAction, autoSaveProjectFile, setAutoSaveProjectFile, invertTimelineScroll, setInvertTimelineScroll, language, setLanguage, ffmpegExperimental, setFfmpegExperimental, hideNotifications, setHideNotifications, autoLoadTimecode, setAutoLoadTimecode, enableTransferTimestamps, setEnableTransferTimestamps, enableAutoHtml5ify, setEnableAutoHtml5ify, customFfPath, setCustomFfPath, storeProjectInWorkingDir, setStoreProjectInWorkingDir } = useUserSettings();
+  const { customOutDir, changeOutDir, keyframeCut, toggleKeyframeCut, timecodeFormat, setTimecodeFormat, invertCutSegments, setInvertCutSegments, askBeforeClose, setAskBeforeClose, enableAskForImportChapters, setEnableAskForImportChapters, enableAskForFileOpenAction, setEnableAskForFileOpenAction, autoSaveProjectFile, setAutoSaveProjectFile, invertTimelineScroll, setInvertTimelineScroll, language, setLanguage, ffmpegExperimental, setFfmpegExperimental, hideNotifications, setHideNotifications, autoLoadTimecode, setAutoLoadTimecode, enableTransferTimestamps, setEnableTransferTimestamps, enableAutoHtml5ify, setEnableAutoHtml5ify, customFfPath, setCustomFfPath, storeProjectInWorkingDir, setStoreProjectInWorkingDir, setSdobSelectedEvent, sdobSelectedEvent, sdobUploadServer, setSdobUploadServer, sdobAPIServer, setSdobAPIServer } = useUserSettings();
 
   const onLangChange = useCallback((e) => {
     const { value } = e.target;
@@ -315,6 +317,41 @@ const Settings = memo(({
           />
         </Table.TextCell>
       </Row>
+
+      {sdob && (
+        <>
+          <Row>
+            <KeyCell>{t('Skydive Or Bust API Service')}</KeyCell>
+            <Table.TextCell>
+              <TextInputField
+                label={t('Server')}
+                value={sdobAPIServer}
+                onChange={e => setSdobAPIServer(e.target.value)}
+              />
+            </Table.TextCell>
+          </Row>
+          <Row>
+            <KeyCell>{t('Skydive Or Bust Upload Service')}</KeyCell>
+            <Table.TextCell>
+              <TextInputField
+                label={t('Server')}
+                value={sdobUploadServer}
+                onChange={e => setSdobUploadServer(e.target.value)}
+              />
+            </Table.TextCell>
+          </Row>
+          <Row>
+            <KeyCell>Skydiving Event</KeyCell>
+            <Table.TextCell>
+              <Select value={sdobSelectedEvent || ''} onChange={e => setSdobSelectedEvent(e.target.value)}>
+                <option key="" value="">{t('Select Event')}</option>
+                {(sdobEventList || []).map((event) => <option key={event.slug} value={event.slug}>{event.heading}</option>)}
+              </Select>
+            </Table.TextCell>
+          </Row>          
+        </>
+      )}
+
     </>
   );
 });

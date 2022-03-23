@@ -17,12 +17,12 @@ const TopMenu = memo(({
   selectedSegments, isCustomFormatSelected, clearOutDir,
   
   sdob,
-  sdobSelectedEvent, sdobSelectedComp, sdobSelectedTeam, sdobSelectedRound, 
-  sdobGetEventById, sdobGetEventBySlug,
+  sdobSelectedComp, sdobSelectedTeam, sdobSelectedRound, 
+  sdobGetEventBySlug,
   sdobGetCompById, sdobGetTeamById, sdobGetRoundByI
 }) => {
   const { t } = useTranslation();
-  const { customOutDir, changeOutDir, simpleMode, outFormatLocked, setOutFormatLocked } = useUserSettings();
+  const { customOutDir, changeOutDir, simpleMode, outFormatLocked, setOutFormatLocked, sdobSelectedEvent } = useUserSettings();
 
   const onOutFormatLockedClick = useCallback(() => setOutFormatLocked((v) => (v ? undefined : fileFormat)), [fileFormat, setOutFormatLocked]);
 
@@ -41,7 +41,7 @@ const TopMenu = memo(({
     >
       {sdob && (
         <>
-        Lossless Cut - Skydive Or Bust Edition { sdobGetEventById(sdobSelectedEvent) }
+        Lossless Cut - Skydive Or Bust Edition
         </>
       )}
       {!sdob && filePath && (

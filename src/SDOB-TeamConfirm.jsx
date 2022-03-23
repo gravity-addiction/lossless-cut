@@ -4,11 +4,13 @@ import { Button, Select, CrossIcon } from 'evergreen-ui';
 import i18n from 'i18next';
 import { useTranslation, Trans } from 'react-i18next';
 import { IoIosHelpCircle } from 'react-icons/io';
+import { join as pathJoin } from 'path';
 
 import SelectTeamButton from './components/SelectTeamButton';
 import HighlightedText from './components/HighlightedText';
 import { primaryColor } from './colors';
-import { withBlur, toast } from './util';
+import useUserSettings from './hooks/useUserSettings';
+import { withBlur, toast, errorToast } from './util';
 
 const sheetStyle = {
   position: 'fixed',
@@ -27,43 +29,22 @@ const boxStyle = { margin: '15px 15px 50px 15px', background: 'rgba(25, 25, 25, 
 const HelpIcon = ({ onClick }) => <IoIosHelpCircle size={20} role="button" onClick={withBlur(onClick)} style={{ cursor: 'pointer', verticalAlign: 'middle', marginLeft: 5 }} />;
 
 const SdobTeamConfirm = memo(({
-  visible, onClosePress, sdobChangedCompClick,
+  visible, isFileOpened, onClosePress,
   
-  onSdobSetSlatePress, onSdobSetExitPress,
+  onSdobSetSlatePress, onSdobSetExitPress, onSdobOpenFileClick,
+  sdobGetCompById, sdobGetEventBySlug,
   
   setSdobSelectedComp, setSdobSelectedTeam, setSdobSelectedRound,
   sdobSelectedComp, sdobSelectedTeam, sdobSelectedRound,
-  sdobCompList, sdobTeamList, sdobRoundList,
-  setSdobCompList, setSdobTeamList, setSdobRoundList,
+  sdobEventList, sdobCompList, sdobTeamList, sdobRoundList,
+  setSdobEventList, setSdobCompList, setSdobTeamList, setSdobRoundList,
   
   setSdobTeamConfirmVisible, sdobTeamConfirmVisible,
   onSdobTeamConfirm, sdobCloseTeamConfirm,
 }) => {
   const { t } = useTranslation();
 
-
-  const sdobChangedRound = (cList, roundNum) => {
-    if (!Array.isArray(cList)) {
-      return;
-    }
-    // Find Team
-    const roundInd = cList.findIndex((round) => String(round.roundNum) === String(roundNum));
-    if (roundInd > -1) {
-      setSdobSelectedRound(cList[roundInd].id || 0);
-    }    
-  };
-
-  const sdobChangedTeam = (cList, id) => {
-    if (!Array.isArray(cList)) {
-      return;
-    }
-    // Find Team
-    const teamInd = cList.findIndex((team) => String(team.id) === String(id));
-    if (teamInd > -1) {
-      setSdobSelectedTeam(cList[teamInd].id || 0);
-      // setSdobTeamList((compList[compInd].teams || []).sort((a, b) => (Number(a.teamNumber) > Number(b.teamNumber)) ? 1 : -1));
-    }
-  };
+  const { sdobSelectedEvent, sdobAPIServer } = useUserSettings();
 
   const sdobChangedComp = (cList, id) => {
     console.log('Setting Comp', cList, id);
@@ -95,10 +76,6 @@ const SdobTeamConfirm = memo(({
       teams = teams.sort((a, b) => (Number(a.teamNumber) > Number(b.teamNumber) ? 1 : -1));
       console.log('Team Array', teams);
       setSdobTeamList(teams);
-      if (teams && teams.length) {
-        sdobChangedTeam(teams, teams[0].id);
-      }
-
     }
   };
 
@@ -107,11 +84,23 @@ const SdobTeamConfirm = memo(({
     setSdobSelectedTeam(team.id);
     setSdobSelectedRound(rnd.i);
     setSdobTeamConfirmVisible(false);
+    if (!isFileOpened) {
+      onSdobOpenFileClick()
+    }
   });
 
   useEffect(() => {
-    console.log('Fetching Info');
-    fetch('https://api.thegarybox.com/api/latest/events/2022_perris_fresh_meet/comps')
+    if (!sdobAPIServer) { return; }
+
+    if (!sdobSelectedEvent) {
+      return;
+    }
+
+    console.log('Fetching Info: Event -', sdobSelectedEvent, sdobGetEventBySlug(sdobSelectedEvent));
+    
+    const baseUrl = new URL(sdobAPIServer );
+    const apiUrl = new URL(pathJoin(baseUrl.pathname, '/events/', sdobSelectedEvent, '/comps/'), sdobAPIServer).href
+    fetch(apiUrl)
       .then(res => res.json())
       .then((compListResp) => {
         if (Array.isArray(compListResp.comps)) {
@@ -119,22 +108,22 @@ const SdobTeamConfirm = memo(({
           compListResp.comps = (compListResp.comps || []).map((comp) => {
             comp.segments = [{ name: 'slate', pre: 2, post: 3 }]
             // CF Rotations
-            if (comp.discipline.toLocaleUpperCase() == 'CF4R') {
+            if ((comp.discipline || '').toLocaleUpperCase('en-US') == 'CF4R') {
               comp.segments.push({ name: 'exit', pre: 5, post: 100 });
             // CF Sequentials 4-Way
-            } else if (comp.discipline.toLocaleUpperCase() == 'CF4S') {
+            } else if ((comp.discipline || '').toLocaleUpperCase('en-US') == 'CF4S') {
               comp.segments.push({ name: 'exit', pre: 5, post: 130 });
             // CF Sequentials 2-Way
-            } else if (comp.discipline.toLocaleUpperCase() == 'CF2') {
+            } else if ((comp.discipline || '').toLocaleUpperCase('en-US') == 'CF2') {
               comp.segments.push({ name: 'exit', pre: 5, post: 70 });
             // FS Collegiates
-            } else if (comp.discipline.toLocaleUpperCase() == 'FSCOLLEGIATE') {
+            } else if ((comp.discipline || '').toLocaleUpperCase('en-US') == 'FSCOLLEGIATE') {
               comp.segments.push({ name: 'exit', pre: 5, post: 50 })
 
-            } else if (comp.discipline.toLocaleUpperCase() == 'FSSPEED') {
+            } else if ((comp.discipline || '').toLocaleUpperCase('en-US') == 'FSSPEED') {
               comp.segments.push({ name: 'exit', pre: 5, post: 50 })
 
-            } else if (comp.discipline.toLocaleUpperCase() == 'FS') {
+            } else if ((comp.discipline || '').toLocaleUpperCase('en-US') == 'FS') {
               comp.segments.push({ name: 'exit', pre: 5, post: 40 })
             }
             return comp;
@@ -142,11 +131,12 @@ const SdobTeamConfirm = memo(({
           setSdobCompList(compListResp.comps || []);
           if (!sdobSelectedComp) {
             setSdobSelectedComp((compListResp.comps || []).length ? compListResp.comps[0].id || 0 : 0);
+          } else if (!compListResp.comps.find(comp => comp.id === sdobSelectedComp)) {
+            sdobChangedComp(compListResp.comps || [], ((compListResp.comps || [])[0] || {}).id);
           }
-          sdobChangedComp(compListResp.comps || [], ((compListResp.comps || [])[0] || {}).id);
         }
       });
-  }, []);
+  }, [sdobSelectedEvent]);
 
   return (
     <AnimatePresence>
@@ -165,7 +155,7 @@ const SdobTeamConfirm = memo(({
 
                 <div class="sdob-team-selection-container">
                   <div>
-                    <Select width="100%" height={50} onChange={sdobChangedCompClick}>
+                    <Select width="100%" height={50} onChange={e => sdobChangedComp(sdobCompList, e.target.value)}>
                       <option key="" value="" disabled>Select Comp</option>
                       {sdobCompList.map(val => (
                         <option key={val.id} value={String(val.id)}>{String(val.name)} {String(val.class)}</option>

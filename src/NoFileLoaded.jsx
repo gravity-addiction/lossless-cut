@@ -9,15 +9,15 @@ import useUserSettings from './hooks/useUserSettings';
 
 const electron = window.require('electron');
 
-const NoFileLoaded = memo(({ mifiLink, toggleHelp, currentCutSeg }) => {
+const NoFileLoaded = memo(({ mifiLink, toggleHelp, currentCutSeg, onSdobOpenFileClick }) => {
   const { t } = useTranslation();
   const { simpleMode, toggleSimpleMode } = useUserSettings();
 
   return (
-    <div className="no-user-select" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, border: '2vmin dashed #252525', color: '#505050', margin: '5vmin', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', whiteSpace: 'nowrap' }}>
+    <div onClick={onSdobOpenFileClick} className="no-user-select" style={{ position: 'absolute', left: 0, right: 0, top: 0, bottom: 0, border: '2vmin dashed #252525', color: '#505050', margin: '5vmin', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', whiteSpace: 'nowrap' }}>
       <div style={{ fontSize: '6vmin', textTransform: 'uppercase' }}>{t('DROP FILE(S)')}</div>
 
-      <div style={{ fontSize: '4vmin', color: '#777', cursor: 'pointer' }} role="button" onClick={toggleHelp}>
+      <div style={{ fontSize: '4vmin', color: '#777' }} role="button">
         <Trans>Press <kbd>H</kbd> for help</Trans>
       </div>
 
@@ -25,7 +25,7 @@ const NoFileLoaded = memo(({ mifiLink, toggleHelp, currentCutSeg }) => {
         <Trans><SetCutpointButton currentCutSeg={currentCutSeg} side="start" style={{ verticalAlign: 'middle' }} /> <SetCutpointButton currentCutSeg={currentCutSeg} side="end" style={{ verticalAlign: 'middle' }} /> or <kbd>I</kbd> <kbd>O</kbd> to set cutpoints</Trans>
       </div>
 
-      <div style={{ fontSize: '3vmin', color: '#ccc', cursor: 'pointer' }} role="button" onClick={toggleSimpleMode}>
+      <div style={{ fontSize: '3vmin', color: '#ccc' }} role="button">
         <SimpleModeButton style={{ verticalAlign: 'middle' }} size={16} /> {simpleMode ? i18n.t('to show advanced view') : i18n.t('to show simple view')}
       </div>
 

@@ -110,6 +110,9 @@ const defaults = {
   keyBindings: defaultKeyBindings,
   customFfPath: undefined,
   storeProjectInWorkingDir: true,
+  sdobSelectedEvent: undefined,
+  sdobUploadServer: 'https://thegarybox.com/upload',
+  sdobAPIServer: 'https://api.thegarybox.com/api/latest',
 };
 
 // For portable app: https://github.com/mifi/lossless-cut/issues/645

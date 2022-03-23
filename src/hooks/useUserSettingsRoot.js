@@ -108,6 +108,12 @@ export default () => {
   useEffect(() => safeSetConfig('customFfPath', customFfPath), [customFfPath]);
   const [storeProjectInWorkingDir, setStoreProjectInWorkingDir] = useState(safeGetConfig('storeProjectInWorkingDir'));
   useEffect(() => safeSetConfig('storeProjectInWorkingDir', storeProjectInWorkingDir), [storeProjectInWorkingDir]);
+  const [sdobSelectedEvent, setSdobSelectedEvent] = useState(safeGetConfig('sdobSelectedEvent'));
+  useEffect(() => safeSetConfig('sdobSelectedEvent', sdobSelectedEvent), [sdobSelectedEvent]);
+  const [sdobUploadServer, setSdobUploadServer] = useState(safeGetConfig('sdobUploadServer'));
+  useEffect(() => safeSetConfig('sdobUploadServer', sdobUploadServer), [sdobUploadServer]);
+  const [sdobAPIServer, setSdobAPIServer] = useState(safeGetConfig('sdobAPIServer'));
+  useEffect(() => safeSetConfig('sdobAPIServer', sdobAPIServer), [sdobAPIServer]);
 
   const resetKeyBindings = useCallback(() => {
     configStore.reset('keyBindings');
@@ -200,5 +206,11 @@ export default () => {
     setCustomFfPath,
     storeProjectInWorkingDir,
     setStoreProjectInWorkingDir,
+    sdobSelectedEvent,
+    setSdobSelectedEvent,
+    sdobUploadServer,
+    setSdobUploadServer,
+    sdobAPIServer,
+    setSdobAPIServer,
   };
 };

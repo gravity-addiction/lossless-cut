@@ -45,20 +45,20 @@ const BottomBar = memo(({
   playing, shortStep, togglePlay, setTimelineMode, hasAudio, timelineMode,
   keyframesEnabled, toggleKeyframesEnabled, seekClosestKeyframe, detectedFps,
 
-  onExportConfirm, onSdobOpenFileClick,
+  onExportConfirm, onSdobOpenFileClick, isFileOpened,
 
   sdob, 
   onSdobSetSlatePress, onSdobSetExitPress,
   
-  setSdobSelectedEvent, setSdobSelectedComp, setSdobSelectedTeam, setSdobSelectedRound,
-  sdobSelectedEvent, sdobSelectedComp, sdobSelectedTeam, sdobSelectedRound,
+  setSdobSelectedComp, setSdobSelectedTeam, setSdobSelectedRound,
+  sdobSelectedComp, sdobSelectedTeam, sdobSelectedRound,
   sdobEventList, sdobCompList, sdobTeamList, sdobRoundList,
   setSdobEventList, setSdobCompList, setSdobTeamList, setSdobRoundList,
   
   setSdobTeamConfirmVisible, sdobTeamConfirmVisible,
   onSdobTeamConfirm, sdobCloseTeamConfirm,
 
-  sdobGetEventById, sdobGetEventBySlug,
+  sdobGetEventBySlug,
   sdobGetCompById, sdobGetTeamById, sdobGetRoundByI
 }) => {
   const { t } = useTranslation();
@@ -175,11 +175,6 @@ const BottomBar = memo(({
   }
 
   const PlayPause = playing ? FaPause : FaPlay;
-
-  const sdobChangedCompClick = (event) => {
-    changedComp(sdobCompList, event.target.value);
-  };
-
 
   return (
     <>
@@ -364,19 +359,6 @@ const BottomBar = memo(({
         <div style={{ color: 'rgba(255,255,255,0.3)', flexShrink: 1, flexGrow: 0, overflow: 'hidden', margin: '0 10px' }}>{!isDev && new Date().getTime() - start > 2 * 60 * 1000 && ['t', 'u', 'C', 's', 's', 'e', 'l', 's', 's', 'o', 'L'].reverse().join('')}</div>
 
 
-        {sdob && hasVideo && (
-          <>
-            <SdobSetSlateButton
-              size={2}
-              onClick={onSdobSetSlatePress}
-            />
-
-            <SdobSetExitButton
-              size={2}
-              onClick={onSdobSetExitPress}
-            />
-          </>
-        )}
 
         
         {sdob && (
@@ -392,10 +374,15 @@ const BottomBar = memo(({
               onClick={onSdobOpenFileClick}
             />
             
-            <SdobTeamConfirm visible={sdobTeamConfirmVisible} 
+            <SdobTeamConfirm visible={sdobTeamConfirmVisible}
+              isFileOpened={isFileOpened}
               onClosePress={sdobCloseTeamConfirm} 
-              onSdobTeamConfirm={onSdobTeamConfirm} 
+              onSdobTeamConfirm={onSdobTeamConfirm}
+              onSdobOpenFileClick={onSdobOpenFileClick}
+              sdobGetCompById={sdobGetCompById}
+              sdobGetEventBySlug={sdobGetEventBySlug}
 
+              sdobEventList={sdobEventList} 
               sdobCompList={sdobCompList} 
               sdobTeamList={sdobTeamList} 
               sdobRoundList={sdobRoundList}
@@ -403,11 +390,10 @@ const BottomBar = memo(({
               setSdobSelectedTeam={setSdobSelectedTeam}
               setSdobSelectedRound={setSdobSelectedRound}
 
+              setSdobEventList={setSdobEventList} 
               setSdobCompList={setSdobCompList}
               setSdobTeamList={setSdobTeamList}
               setSdobRoundList={setSdobRoundList}
-
-              sdobChangedCompClick={sdobChangedCompClick}
 
               onSdobSetSlatePress={onSdobSetSlatePress}
               onSdobSetExitPress={onSdobSetExitPress}
@@ -420,6 +406,22 @@ const BottomBar = memo(({
               sdobTeamConfirmVisible={sdobTeamConfirmVisible}
               onSdobTeamConfirm={onSdobTeamConfirm}
               sdobCloseTeamConfirm={sdobCloseTeamConfirm}
+            />
+          </>
+        )}
+
+
+        {sdob && hasVideo && (
+          <>
+            <div style={{ flexGrow: 1 }} />
+            <SdobSetSlateButton
+              size={2}
+              onClick={onSdobSetSlatePress}
+            />
+
+            <SdobSetExitButton
+              size={2}
+              onClick={onSdobSetExitPress}
             />
           </>
         )}

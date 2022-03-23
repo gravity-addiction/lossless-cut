@@ -3,7 +3,7 @@
   "productName": "LosslessCut SkydiveOrBust Edition",
   "description": "The swiss army knife of lossless video/audio editing",
   "copyright": "Copyright © 2021 ${author}",
-  "version": "3.44.0",
+  "version": "3.44.101",
   "main": "public/electron.js",
   "homepage": "./",
   "scripts": {
@@ -36,9 +36,16 @@
     "email": "finstaden@gmail.com",
     "url": "https://mifi.no/losslesscut/"
   },
+  "contributors": [
+    {
+      "name": "Gary Taylor",
+      "email": "gravity.addiction@gmail.com",
+      "url": "https://skydiveorbust.com/losslesscut/"
+    }
+  ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/mifi/lossless-cut.git"
+    "url": "https://github.com/gravity-addiction/lossless-cut.git"
   },
   "license": "GPL-2.0-only",
   "devDependencies": {
@@ -112,6 +119,7 @@
     "lodash": "^4.17.19",
     "mime-types": "^2.1.14",
     "open": "^7.0.3",
+    "path": "^0.12.7",
     "read-chunk": "^2.0.0",
     "request": "^2.88.2",
     "semver": "^7.1.3",
