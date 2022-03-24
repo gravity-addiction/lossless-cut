@@ -132,7 +132,7 @@ export function setFileNameTitle(filePath) {
 }
 
 export function filenamify(name) {
-  return name.replace(/[^0-9a-zA-Z_\-.]/g, '_');
+  return (name || '').replace(/[^0-9a-zA-Z_\-.]/g, '_');
 }
 
 export function withBlur(cb) {
@@ -182,7 +182,7 @@ export function getOutFileExtension({ isCustomFormatSelected, outFormat, filePat
 
 // This is used as a fallback and so it has to always generate unique file names
 // eslint-disable-next-line no-template-curly-in-string
-export const defaultOutSegTemplate = '${FILENAME}-${CUT_FROM}-${CUT_TO}${SEG_SUFFIX}${EXT}';
+export const defaultOutSegTemplate = '${SEG_TAGS.TEAM_NUMBER}-R${SEG_TAGS.ROUND_NUMBER}${SEG_SUFFIX}${EXT}'; // '${FILENAME}-${CUT_FROM}-${CUT_TO}${SEG_SUFFIX}${EXT}';
 
 export function generateSegFileName({ template, inputFileNameWithoutExt, segSuffix, ext, segNum, segLabel, cutFrom, cutTo, tags }) {
   const compiled = lodashTemplate(template);

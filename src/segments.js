@@ -63,6 +63,8 @@ export function invertSegments(sortedCutSegments, includeFirstSegment, includeLa
       ret.push({
         start: 0,
         end: sortedCutSegments[0].start,
+        name: sortedCutSegments[0].name,
+        tags: sortedCutSegments[0].tags
       });
     }
   }
@@ -72,6 +74,8 @@ export function invertSegments(sortedCutSegments, includeFirstSegment, includeLa
     ret.push({
       start: sortedCutSegments[i - 1].end,
       end: cutSegment.start,
+      name: sortedCutSegments[i - 1].name,
+      tags: sortedCutSegments[i - 1].tags
     });
   });
 
@@ -81,6 +85,8 @@ export function invertSegments(sortedCutSegments, includeFirstSegment, includeLa
       ret.push({
         start: last.end,
         end: duration,
+        name: last.name,
+        tags: last.tags
       });
     }
   }

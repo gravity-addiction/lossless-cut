@@ -2,6 +2,7 @@ import React, { memo, useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button, Select, CrossIcon } from 'evergreen-ui';
 import i18n from 'i18next';
+import debounce from 'lodash.debounce';
 import { useTranslation, Trans } from 'react-i18next';
 import { IoIosHelpCircle } from 'react-icons/io';
 import { join as pathJoin } from 'path';
@@ -30,6 +31,8 @@ const HelpIcon = ({ onClick }) => <IoIosHelpCircle size={20} role="button" onCli
 
 const SdobTeamConfirm = memo(({
   visible, isFileOpened, onClosePress,
+
+  sdobRefreshAPI, setSdobRefreshAPI,
   
   onSdobSetSlatePress, onSdobSetExitPress, onSdobOpenFileClick,
   sdobGetCompById, sdobGetEventBySlug,
@@ -84,20 +87,14 @@ const SdobTeamConfirm = memo(({
     setSdobSelectedTeam(team.id);
     setSdobSelectedRound(rnd.i);
     setSdobTeamConfirmVisible(false);
-    if (!isFileOpened) {
-      onSdobOpenFileClick()
-    }
+    setTimeout(() => {
+      if (!isFileOpened) {
+        onSdobOpenFileClick()
+      }
+    }, 150);
   });
 
-  useEffect(() => {
-    if (!sdobAPIServer) { return; }
-
-    if (!sdobSelectedEvent) {
-      return;
-    }
-
-    console.log('Fetching Info: Event -', sdobSelectedEvent, sdobGetEventBySlug(sdobSelectedEvent));
-    
+  const updateEvents = useCallback(() => {
     const baseUrl = new URL(sdobAPIServer );
     const apiUrl = new URL(pathJoin(baseUrl.pathname, '/events/', sdobSelectedEvent, '/comps/'), sdobAPIServer).href
     fetch(apiUrl)
@@ -131,12 +128,29 @@ const SdobTeamConfirm = memo(({
           setSdobCompList(compListResp.comps || []);
           if (!sdobSelectedComp) {
             setSdobSelectedComp((compListResp.comps || []).length ? compListResp.comps[0].id || 0 : 0);
-          } else if (!compListResp.comps.find(comp => comp.id === sdobSelectedComp)) {
+          }
+          const loadedComp = compListResp.comps.find(comp => comp.id === sdobSelectedComp);
+
+          if (!loadedComp) {
             sdobChangedComp(compListResp.comps || [], ((compListResp.comps || [])[0] || {}).id);
+          } else {
+            sdobChangedComp(compListResp.comps || [], sdobSelectedComp);
           }
         }
       });
-  }, [sdobSelectedEvent]);
+    });
+
+  useEffect(() => {
+    if (!sdobAPIServer) { return; }
+
+    if (!sdobSelectedEvent) {
+      return;
+    }
+
+    // console.log('Fetching Info: Event -', sdobSelectedEvent, sdobGetEventBySlug(sdobSelectedEvent));
+    updateEvents();
+
+  }, [sdobRefreshAPI, sdobSelectedEvent]);
 
   return (
     <AnimatePresence>

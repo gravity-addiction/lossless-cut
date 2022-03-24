@@ -161,6 +161,7 @@ const App = memo(() => {
   
     // Skydive or Bust state
   const [sdob, setSdob] = useState(true);
+  const [sdobRefreshAPI, setSdobRefreshAPI] = useState(1);
   const [sdobTeamConfirmVisible, setSdobTeamConfirmVisible] = useState(true);
   const [sdobEventList, setSdobEventList] = useState([]);
   const [sdobCompList, setSdobCompList] = useState([]);
@@ -208,14 +209,14 @@ const App = memo(() => {
   const [currentSegIndex, setCurrentSegIndex] = useState(0);
   const [cutStartTimeManual, setCutStartTimeManual] = useState();
   const [cutEndTimeManual, setCutEndTimeManual] = useState();
-  const [cutSegments, setCutSegments, cutSegmentsHistory] = useStateWithHistory(
-    createInitialCutSegments(),
-    100,
+  const [cutSegments, setCutSegments] = useState(
+    createInitialCutSegments()
   );
 
   const clearSegments = useCallback(() => {
     clearSegCounter();
     setCutSegments(createInitialCutSegments());
+    updateSegmentTags();
   }, [clearSegCounter, createInitialCutSegments, setCutSegments]);
 
   const shuffleSegments = useCallback(() => setCutSegments((oldSegments) => shuffleArray(oldSegments)), [setCutSegments]);
@@ -246,7 +247,7 @@ const App = memo(() => {
     copySource: copySource,
   } = useCopyOperations()
 
-  const outSegTemplateOrDefault = outSegTemplate || defaultOutSegTemplate;
+  const outSegTemplateOrDefault = defaultOutSegTemplate; // outSegTemplate || defaultOutSegTemplate;
 
   useEffect(() => {
     const l = language || fallbackLng;
@@ -933,7 +934,6 @@ const App = memo(() => {
       setUsingDummyVideo(false);
       setPlaying(false);
       setDuration();
-      cutSegmentsHistory.go(0);
       clearSegments(); // TODO this will cause two history items
       setCutStartTimeManual();
       setCutEndTimeManual();
@@ -963,10 +963,9 @@ const App = memo(() => {
       setHideCanvasPreview(false);
       setExportConfirmVisible(false);
       setSdobTeamConfirmVisible(false);
-
       cancelRenderThumbnails();
     });
-  }, [cutSegmentsHistory, clearSegments, setFileFormat, setDetectedFileFormat, cancelRenderThumbnails]);
+  }, [clearSegments, setFileFormat, setDetectedFileFormat, cancelRenderThumbnails]);
 
 
   const showUnsupportedFileMessage = useCallback(() => {
@@ -1242,15 +1241,16 @@ const App = memo(() => {
 
   const generateOutSegFileNames = useCallback(({ segments = segmentsToExport, template }) => (
     segments.map((segment, i) => {
-      const { start, end, name = '' } = segment;
+      const { start, end, name = '', tags = {} } = segment;
       const cutFromStr = formatDuration({ seconds: start, fileNameFriendly: true });
       const cutToStr = formatDuration({ seconds: end, fileNameFriendly: true });
       const segNum = i + 1;
 
       // https://github.com/mifi/lossless-cut/issues/583
-      let segSuffix = '';
-      if (name) segSuffix = `-${filenamifyOrNot(name)}`;
-      else if (segments.length > 1) segSuffix = `-seg${segNum}`;
+      const dT = new Date();
+      let segSuffix = `-${dT.getFullYear()}-${dT.getMonth() + 1}-${dT.getDate()}_${dT.getHours()}-${dT.getMinutes()}-${dT.getSeconds()}`;
+      if (name) segSuffix += `-${filenamifyOrNot(name)}`;
+      else if (segments.length > 1) segSuffix += `-seg${segNum}`;
 
       const ext = getOutFileExtension({ isCustomFormatSelected, outFormat: fileFormat, filePath });
 
@@ -1301,6 +1301,7 @@ const App = memo(() => {
 
     setStreamsSelectorShown(false);
     setExportConfirmVisible(false);
+    updateSegmentTags();
 
     if (workingRef.current) return;
     try {
@@ -1375,7 +1376,7 @@ const App = memo(() => {
           autoDeleteMergedSegments,
           preserveMetadataOnMerge,
           appendFfmpegCommandLog,
-          nameSuffix: `${new Date().getTime()}-${sdobSelectedComp || '0'}-${sdobSelectedTeam || '0'}-${sdobSelectedRound || '0'}`,
+          nameSuffix: '', // `${new Date().getTime()}`, // -${sdobSelectedComp || '0'}-${sdobSelectedTeam || '0'}-${sdobSelectedRound || '0'}`,
         });
         console.log('Submit File to Server', submitFile);
 
@@ -1402,27 +1403,31 @@ const App = memo(() => {
           }
         };
 
-        if ((sdobUploadServer || '').substr(0, 5).toLocaleUpperCase('en-US') === 'HTTPS') {
-          const agentOptions = {
-  //           host: 'transq.thegarybox.com',
-  //           port: '443',
-  //           path: '/upload',
-            rejectUnauthorized: false
-          };
+        if (sdobUploadServer) {
+          setWorking('Uploading To Server');
+          if ((sdobUploadServer || '').substr(0, 5).toLocaleUpperCase('en-US') === 'HTTPS') {
+            const agentOptions = {
+    //           host: 'transq.thegarybox.com',
+    //           port: '443',
+    //           path: '/upload',
+              rejectUnauthorized: false
+            };
 
-          options.agent = new https.Agent(agentOptions);
-          options.port = 443;
+            options.agent = new https.Agent(agentOptions);
+            options.port = 443;
+          }
+        
+          request(options, function (err, res, body) {
+            if(err) console.log(err);
+          });
         }
-      
-        request(options, function (err, res, body) {
-          if(err) console.log(err);
-          console.log(body);
-          resetState();
-        });
       }
-      console.log('Comp', sdobSelectedComp);
-      console.log('Team', sdobSelectedTeam);
-      console.log('Round', sdobSelectedRound);
+      resetState();
+      setSdobSelectedTeam(undefined);
+      setSdobSelectedRound(undefined);
+      setSdobTeamConfirmVisible(true);
+
+
       const msgs = [
       //  i18n.t('Done! Note: cutpoints may be inaccurate. Make sure you test the output files in your desired player/editor before you delete the source. If output does not look right, see the HELP page.')
       ];
@@ -1533,7 +1538,10 @@ const App = memo(() => {
     }
   }, [working, filePath, duration, updateSegAtIndex]);
 
-  const sdobCloseTeamConfirm = useCallback(() => setSdobTeamConfirmVisible(false), []);
+  const sdobCloseTeamConfirm = useCallback(() => {
+    setSdobTeamConfirmVisible(false);
+    updateSegmentTags();
+  }, []);
 
   const onSdobTeamConfirm = useCallback(async () => {
     errorToast('Selected Team');
@@ -1573,6 +1581,25 @@ const App = memo(() => {
     console.log('Fetching Event List: Event -', sdobSelectedEvent);
     sdobGetEventList()
   }, []);
+
+  const updateSegmentTags = useCallback(() => {
+    const eventInfo = sdobGetEventBySlug(sdobSelectedEvent);
+    const compInfo = sdobGetCompById(sdobSelectedComp) || {}
+    const teamInfo = sdobGetTeamById(sdobSelectedTeam) || {};
+    const roundInfo = sdobGetRoundByI(sdobSelectedRound) || {};
+
+    setCutSegments(cutSegments.map(seg => {
+      seg.tags = seg.tags || {};
+      seg.tags.TEAM_NUMBER = teamInfo.teamNumber;
+      seg.tags.ROUND_NUMBER = roundInfo.roundNum;
+      return seg;
+    }));
+  }, [cutSegments, sdobSelectedEvent, sdobSelectedComp, sdobSelectedTeam, sdobSelectedRound]);
+
+  useEffect(() => {
+    // Setup Segments with tags
+    updateSegmentTags();
+  }, [createInitialCutSegments, sdobSelectedComp, sdobSelectedTeam, sdobSelectedRound])
 
 
   const captureSnapshot = useCallback(async () => {
@@ -1680,7 +1707,7 @@ const App = memo(() => {
   }, [clearSegCounter, createIndexedSegment, setCutSegments]);
 
   const loadEdlFile = useCallback(async ({ path, type, append }) => {
-    console.log('Loading EDL file', type, path, append);
+    // console.log('Loading EDL file', type, path, append);
     //-/ loadCutSegments(await readEdlFile({ type, path }), append);
   }, [loadCutSegments]);
 
@@ -1689,7 +1716,7 @@ const App = memo(() => {
 
     resetState();
 
-    console.log('state reset');
+    // console.log('state reset');
 
     setWorking(i18n.t('Loading file'));
 
@@ -1774,7 +1801,7 @@ const App = memo(() => {
         await html5ifyAndLoadWithPreferences(cod, fp, 'fastest', haveVideoStream, haveAudioStream);
       }
 
-      await tryOpenProject({ chapters: fileMeta.chapters });
+      // await tryOpenProject({ chapters: fileMeta.chapters });
 
       // throw new Error('test');
 
@@ -1788,6 +1815,8 @@ const App = memo(() => {
         setFileNameTitle(fp);
         setFileFormat(outFormatLocked || fileFormatNew);
         setDetectedFileFormat(fileFormatNew);
+        updateSegmentTags();
+        
 
         // This needs to be last, because it triggers <video> to load the video
         // If not, onVideoError might be triggered before setWorking() has been cleared.
@@ -2086,8 +2115,6 @@ const App = memo(() => {
       batchOpenSelectedFile,
       closeBatch,
       removeCurrentSegment: () => removeCutSegment(currentSegIndexSafe),
-      undo: () => cutSegmentsHistory.back(),
-      redo: () => cutSegmentsHistory.forward(),
       labelCurrentSegment: () => { onLabelSegment(currentSegIndexSafe); return false; },
       addSegment,
       toggleHelp: () => { toggleHelp(); return false; },
@@ -2159,7 +2186,7 @@ const App = memo(() => {
     if (match) return bubble;
 
     return true; // bubble the event
-  }, [addSegment, askSetStartTimeOffset, batchFileJump, batchOpenSelectedFile, captureSnapshot, changePlaybackRate, cleanupFilesDialog, clearSegments, closeBatch, closeExportConfirm, concatCurrentBatch, concatDialogVisible, convertFormatBatch, createFixedDurationSegments, createNumSegments, currentSegIndexSafe, cutSegmentsHistory, deselectAllSegments, exportConfirmVisible, extractAllStreams, extractCurrentSegmentFramesAsImages, fillSegmentsGaps, goToTimecode, increaseRotation, invertAllSegments, jumpCutEnd, jumpCutStart, jumpSeg, jumpTimelineEnd, jumpTimelineStart, keyboardNormalSeekSpeed, keyboardSeekAccFactor, keyboardShortcutsVisible, onExportConfirm, onExportPress, onLabelSegment, pause, play, removeCutSegment, removeSelectedSegments, reorderSegsByStartTime, seekClosestKeyframe, seekRel, seekRelPercent, selectAllSegments, selectOnlyCurrentSegment, setCutEnd, setCutStart, setPlaybackVolume, shortStep, shuffleSegments, splitCurrentSegment, timelineToggleComfortZoom, toggleCaptureFormat, toggleCurrentSegmentSelected, toggleHelp, toggleKeyboardShortcuts, toggleKeyframeCut, togglePlay, toggleSegmentsList, toggleStreamsSelector, toggleStripAudio, tryFixInvalidDuration, userHtml5ifyCurrentFile, zoomRel]);
+  }, [addSegment, askSetStartTimeOffset, batchFileJump, batchOpenSelectedFile, captureSnapshot, changePlaybackRate, cleanupFilesDialog, clearSegments, closeBatch, closeExportConfirm, concatCurrentBatch, concatDialogVisible, convertFormatBatch, createFixedDurationSegments, createNumSegments, currentSegIndexSafe, deselectAllSegments, exportConfirmVisible, extractAllStreams, extractCurrentSegmentFramesAsImages, fillSegmentsGaps, goToTimecode, increaseRotation, invertAllSegments, jumpCutEnd, jumpCutStart, jumpSeg, jumpTimelineEnd, jumpTimelineStart, keyboardNormalSeekSpeed, keyboardSeekAccFactor, keyboardShortcutsVisible, onExportConfirm, onExportPress, onLabelSegment, pause, play, removeCutSegment, removeSelectedSegments, reorderSegsByStartTime, seekClosestKeyframe, seekRel, seekRelPercent, selectAllSegments, selectOnlyCurrentSegment, setCutEnd, setCutStart, setPlaybackVolume, shortStep, shuffleSegments, splitCurrentSegment, timelineToggleComfortZoom, toggleCaptureFormat, toggleCurrentSegmentSelected, toggleHelp, toggleKeyboardShortcuts, toggleKeyframeCut, togglePlay, toggleSegmentsList, toggleStreamsSelector, toggleStripAudio, tryFixInvalidDuration, userHtml5ifyCurrentFile, zoomRel]);
 
   useKeyboard({ keyBindings, onKeyPress });
 
@@ -2438,8 +2465,11 @@ const App = memo(() => {
       return;
     }
 
-    const myComp = sdobCompList.find(comp => comp.id === sdobSelectedComp);
-    const slateSegment = (myComp.segments || []).find((seg) => seg.name == 'slate');
+    const eventInfo = sdobGetEventBySlug(sdobSelectedEvent);
+    const compInfo = sdobGetCompById(sdobSelectedComp) || {}
+    const teamInfo = sdobGetTeamById(sdobSelectedTeam) || {};
+    const roundInfo = sdobGetRoundByI(sdobSelectedRound) || {};
+    const slateSegment = (compInfo.segments || []).find((seg) => seg.name == 'slate');
     if (!slateSegment) {
       errorToast('No Slate needed for this video');
       return;
@@ -2451,7 +2481,7 @@ const App = memo(() => {
         ...cutSegments,
         createIndexedSegment({ segment: { 
           start: Math.min(Math.max(currentTime - slateSegment.pre, 0), duration), 
-          end: Math.min(Math.max(currentTime + slateSegment.post, 0), duration) 
+          end: Math.min(Math.max(currentTime + slateSegment.post, 0), duration)
         }, incrementCount: true }),
       ];
 
@@ -2472,8 +2502,12 @@ const App = memo(() => {
       return;
     }
 
-    const myComp = sdobCompList.find(comp => comp.id === sdobSelectedComp);
-    const exitSegment = (myComp.segments || []).find((seg) => seg.name == 'exit');
+    const eventInfo = sdobGetEventBySlug(sdobSelectedEvent);
+    const compInfo = sdobGetCompById(sdobSelectedComp) || {}
+    const teamInfo = sdobGetTeamById(sdobSelectedTeam) || {};
+    const roundInfo = sdobGetRoundByI(sdobSelectedRound) || {};
+
+    const exitSegment = (compInfo.segments || []).find((seg) => seg.name == 'exit');
     if (!exitSegment) {
       errorToast('No Exit needed for this video');
       return;
@@ -2485,7 +2519,7 @@ const App = memo(() => {
         ...cutSegments,
         createIndexedSegment({ segment: { 
           start: Math.min(Math.max(currentTime - exitSegment.pre, 0), duration), 
-          end: Math.min(Math.max(currentTime + exitSegment.post, 0), duration) 
+          end: Math.min(Math.max(currentTime + exitSegment.post, 0), duration)
         }, incrementCount: true }),
       ];
 
@@ -2765,6 +2799,8 @@ const App = memo(() => {
               isFileOpened={isFileOpened}
 
               sdob={sdob}
+              sdobRefreshAPI={sdobRefreshAPI}
+              setSdobRefreshAPI={setSdobRefreshAPI}
               onSdobOpenFileClick={onSdobOpenFileClick}
               onSdobSetSlatePress={onSdobSetSlatePress}
               onSdobSetExitPress={onSdobSetExitPress}
@@ -2853,6 +2889,8 @@ const App = memo(() => {
                   onKeyboardShortcutsDialogRequested={onKeyboardShortcutsDialogRequested}
                   sdob={sdob}
                   sdobEventList={sdobEventList}
+                  sdobRefreshAPI={sdobRefreshAPI}
+                  setSdobRefreshAPI={setSdobRefreshAPI}
                 />
               </Table.Body>
             </Table>

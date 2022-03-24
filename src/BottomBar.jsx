@@ -47,7 +47,7 @@ const BottomBar = memo(({
 
   onExportConfirm, onSdobOpenFileClick, isFileOpened,
 
-  sdob, 
+  sdob, sdobRefreshAPI, setSdobRefreshAPI,
   onSdobSetSlatePress, onSdobSetExitPress,
   
   setSdobSelectedComp, setSdobSelectedTeam, setSdobSelectedRound,
@@ -306,7 +306,7 @@ const BottomBar = memo(({
               <strong>{ sdobGetCompById(sdobSelectedComp)?.name }</strong>
             </div>
             <div style={{ padding: '0px 10px', fontSize: '20px'  }}>
-              <small style={{ color: primaryColor }}>Team:&nbsp;</small> { sdobGetTeamById(sdobSelectedTeam)?.name }
+              <small style={{ color: primaryColor }}>Team:&nbsp;</small> { sdobGetTeamById(sdobSelectedTeam)?.teamNumber } { sdobGetTeamById(sdobSelectedTeam)?.name }
             </div>
             <div style={{ padding: '0px 10px', fontSize: '20px'  }}>
               <small style={{ color: primaryColor }}>Round:&nbsp;</small> { sdobGetRoundByI(sdobSelectedRound)?.roundNum }
@@ -364,16 +364,20 @@ const BottomBar = memo(({
         {sdob && (
           <>
             <div style={{ flexGrow: 1 }} />
+            <SdobSelectVideoButton
+              size={2}
+              onClick={onSdobOpenFileClick}
+            />
+                        
             <SdobSelectTeamButton
               size={2}
               onClick={setSdobTeamConfirmVisible}
             />
             
-            <SdobSelectVideoButton
-              size={2}
-              onClick={onSdobOpenFileClick}
-            />
-            
+            {sdob && !sdobSelectedTeam && (
+              <h2 color="red">&lt;- Click Here!</h2>
+            )}            
+
             <SdobTeamConfirm visible={sdobTeamConfirmVisible}
               isFileOpened={isFileOpened}
               onClosePress={sdobCloseTeamConfirm} 
@@ -381,6 +385,9 @@ const BottomBar = memo(({
               onSdobOpenFileClick={onSdobOpenFileClick}
               sdobGetCompById={sdobGetCompById}
               sdobGetEventBySlug={sdobGetEventBySlug}
+
+              sdobRefreshAPI={sdobRefreshAPI}
+              setSdobRefreshAPI={setSdobRefreshAPI}
 
               sdobEventList={sdobEventList} 
               sdobCompList={sdobCompList} 
@@ -407,11 +414,12 @@ const BottomBar = memo(({
               onSdobTeamConfirm={onSdobTeamConfirm}
               sdobCloseTeamConfirm={sdobCloseTeamConfirm}
             />
+
           </>
         )}
 
 
-        {sdob && hasVideo && (
+        {/* {sdob && hasVideo && (
           <>
             <div style={{ flexGrow: 1 }} />
             <SdobSetSlateButton
@@ -424,12 +432,15 @@ const BottomBar = memo(({
               onClick={onSdobSetExitPress}
             />
           </>
-        )}
+        )} */}
+
 
         <div style={{ flexGrow: 1 }} />
 
 
-        {sdob && hasVideo && (
+
+
+        {sdob && hasVideo && sdobSelectedTeam && (
           <>
             <SdobExportButton
               size={2}

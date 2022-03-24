@@ -45,7 +45,9 @@ const Settings = memo(({
   onTunerRequested,
   onKeyboardShortcutsDialogRequested,
   sdob,
-  sdobEventList
+  sdobEventList,
+  sdobRefreshAPI,
+  setSdobRefreshAPI
 }) => {
   const { t } = useTranslation();
 
@@ -76,6 +78,9 @@ const Settings = memo(({
     setCustomFfPath(newCustomFfPath);
   }, [customFfPath, setCustomFfPath]);
 
+  const onSdobRefreshApiClick = useCallback(async () => {
+    setSdobRefreshAPI(sdobRefreshAPI + 1);
+  })
   return (
     <>
       <Row>
@@ -321,7 +326,10 @@ const Settings = memo(({
       {sdob && (
         <>
           <Row>
-            <KeyCell>{t('Skydive Or Bust API Service')}</KeyCell>
+            <KeyCell>
+              {t('Skydive Or Bust API Service')} &nbsp;&nbsp;
+              <Button iconBefore={<FaKeyboard />} onClick={onSdobRefreshApiClick}>Update</Button>
+            </KeyCell>
             <Table.TextCell>
               <TextInputField
                 label={t('Server')}
