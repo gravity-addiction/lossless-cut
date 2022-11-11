@@ -1396,7 +1396,7 @@ const App = memo(() => {
           },
           formData : {
               "file1": fs.createReadStream(submitFile.outPath),
-              "file1.event": "perris-fresh-meet-2020",
+              "file1.event": sdobGetEventById(sdobSelectedEvent).slug || 'unknown',
               "file1.comp_id": sdobGetCompById(sdobSelectedComp).id || 0,
               "file1.team_id": sdobGetTeamById(sdobSelectedTeam).id || 0,
               "file1.round": sdobGetRoundByI(sdobSelectedRound).roundNum || 0
