@@ -21,6 +21,7 @@ const RightMenu = memo(({
   simpleMode, onSdobSetExitPress, onSdobSetSlatePress, onExportConfirm, 
   setSelectedComp, setSelectedTeam, setSelectedRound, selectedComp, selectedTeam, selectedRound,
   setExportConfirmVisible, setSdobTeamConfirmVisible, sdobTeamConfirmVisible, onSdobTeamConfirm, closeSdobTeamConfirm,
+  sdobCompList, sdobTeamList, sdobRoundList
 }) => {
   const rotationStr = `${rotation}°`;
 
