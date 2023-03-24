@@ -88,11 +88,11 @@ const request = window.require('request');
 const http = window.require('http');
 const https = window.require('https');
 
-function getHtml5ifiedPath(cod, fp, type) {
-  // See also inside ffmpegHtml5ify
-  const ext = (isMac && ['slowest', 'slow', 'slow-audio'].includes(type)) ? 'mp4' : 'mkv';
-  return getOutPath(cod, fp, `${html5ifiedPrefix}${type}.${ext}`);
-}
+// function getHtml5ifiedPath(cod, fp, type) {
+//   // See also inside ffmpegHtml5ify
+//   const ext = (isMac && ['slowest', 'slow', 'slow-audio'].includes(type)) ? 'mp4' : 'mkv';
+//   return getOutPath(cod, fp, `${html5ifiedPrefix}${type}.${ext}`);
+// }
 
 
 const isDev = window.require('electron-is-dev');
@@ -2702,7 +2702,6 @@ const App = memo(() => {
                 {working && <Loading text={working} cutProgress={cutProgress} />}
               </AnimatePresence>
 
-              {tunerVisible && <ValueTuners type={tunerVisible} onFinished={() => setTunerVisible()} />}
             </div>
 
             <AnimatePresence>
