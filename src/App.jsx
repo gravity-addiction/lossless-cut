@@ -2736,6 +2736,9 @@ const App = memo(() => {
                   onViewSegmentTags={onViewSegmentTags}
                   onSelectSegmentsByLabel={onSelectSegmentsByLabel}
                   onLabelSelectedSegments={onLabelSelectedSegments}
+                  sdobCompList={sdobCompList}
+                  sdobTeamList={sdobTeamList}
+                  sdobRoundList={sdobRoundList}
                 />
               )}
             </AnimatePresence>
