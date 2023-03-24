@@ -108,7 +108,7 @@ const RightMenu = memo(({
   
   useEffect(() => {
     console.log('Fetching Info');
-    fetch('https://api.thegarybox.com/api/latest/events/2022_perris_fresh_meet/comps')
+    fetch('https://api.thegarybox.com/api/latest/events/2023_perris_fresh_meet/comps')
       .then(res => res.json())
       .then((compListResp) => {
         if (Array.isArray(compListResp.comps)) {

@@ -411,7 +411,6 @@ const BottomBar = memo(({
 
               setSdobTeamConfirmVisible={setSdobTeamConfirmVisible}
               sdobTeamConfirmVisible={sdobTeamConfirmVisible}
-              onSdobTeamConfirm={onSdobTeamConfirm}
               sdobCloseTeamConfirm={sdobCloseTeamConfirm}
             />
 
@@ -419,7 +418,7 @@ const BottomBar = memo(({
         )}
 
 
-        {/* {sdob && hasVideo && (
+        {sdob && hasVideo && (
           <>
             <div style={{ flexGrow: 1 }} />
             <SdobSetSlateButton
@@ -432,7 +431,7 @@ const BottomBar = memo(({
               onClick={onSdobSetExitPress}
             />
           </>
-        )} */}
+        )}
 
 
         <div style={{ flexGrow: 1 }} />

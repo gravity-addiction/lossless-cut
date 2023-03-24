@@ -81,6 +81,7 @@ import { createSegment, getCleanCutSegments, getSegApparentStart, findSegmentsAt
 import { getOutSegError as getOutSegErrorRaw } from './util/outputNameTemplate';
 
 import loadingLottie from './7077-magic-flow.json';
+// import axios from 'axios';
 
 const fs = window.require('fs-extra');
 const request = window.require('request');
@@ -1392,33 +1393,51 @@ const App = memo(() => {
           url: sdobUploadServer, // "https://transq.thegarybox.com/upload",
           headers: {
               // "Authorization": "Basic " + auth,
-              "Content-Type": "multipart/form-data"
+              "Content-Type": "multipart/form-data",
+              "X-Event": sdobGetEventBySlug(sdobSelectedEvent).slug || 'unknown',
+              "X-CompID": sdobGetCompById(sdobSelectedComp).id || 0,
+              "X-TeamID": sdobGetTeamById(sdobSelectedTeam).id || 0,
+              "X-Team": sdobGetTeamById(sdobSelectedTeam).teamNumber || 0,
+              "X-Round": sdobGetRoundByI(sdobSelectedRound).roundNum || 0
           },
           formData : {
-              "file1": fs.createReadStream(submitFile.outPath),
-              "file1.event": sdobGetEventById(sdobSelectedEvent).slug || 'unknown',
-              "file1.comp_id": sdobGetCompById(sdobSelectedComp).id || 0,
-              "file1.team_id": sdobGetTeamById(sdobSelectedTeam).id || 0,
-              "file1.round": sdobGetRoundByI(sdobSelectedRound).roundNum || 0
+            "file1": fs.createReadStream(submitFile.outPath),
+            "file1.event": sdobGetEventBySlug(sdobSelectedEvent).slug || 'unknown',
+            "file1.comp_id": sdobGetCompById(sdobSelectedComp).id || 0,
+            "file1.team_id": sdobGetTeamById(sdobSelectedTeam).id || 0,
+            "file1.team": sdobGetTeamById(sdobSelectedTeam).teamNumber || 0,
+            "file1.round": sdobGetRoundByI(sdobSelectedRound).roundNum || 0
           }
         };
+        console.log(options);
 
         if (sdobUploadServer) {
           setWorking('Uploading To Server');
           if ((sdobUploadServer || '').substr(0, 5).toLocaleUpperCase('en-US') === 'HTTPS') {
+            console.log('Uploading' );
             const agentOptions = {
-    //           host: 'transq.thegarybox.com',
-    //           port: '443',
-    //           path: '/upload',
+              host: 'transq.thegarybox.com',
+              port: '443',
+              path: '/upload',
               rejectUnauthorized: false
             };
 
             options.agent = new https.Agent(agentOptions);
             options.port = 443;
           }
-        
+
+          // axios.post(sdobUploadServer, {
+          //   "file1": fs.createReadStream(submitFile.outPath),
+          //   "file1.event": sdobGetEventBySlug(sdobSelectedEvent).slug || 'unknown',
+          //   "file1.comp_id": sdobGetCompById(sdobSelectedComp).id || 0,
+          //   "file1.team_id": sdobGetTeamById(sdobSelectedTeam).id || 0,
+          //   "file1.round": sdobGetRoundByI(sdobSelectedRound).roundNum || 0
+          // });
           request(options, function (err, res, body) {
-            if(err) console.log(err);
+            if (err) {
+              return console.error('upload failed:', err);
+            }
+            console.log('Upload successful!  Server responded with:', body);
           });
         }
       }
@@ -2763,7 +2782,6 @@ const App = memo(() => {
               increaseRotation={increaseRotation}
               cleanupFilesDialog={cleanupFilesDialog}
               captureSnapshot={captureSnapshot}
-              onExportPress={onExportPress}
               segmentsToExport={segmentsToExport}
               seekAbs={seekAbs}
               currentSegIndexSafe={currentSegIndexSafe}
