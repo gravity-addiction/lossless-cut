@@ -97,6 +97,7 @@
   "dependencies": {
     "@electron/remote": "^2.0.10",
     "@radix-ui/colors": "^0.1.8",
+    "@zxing/library": "^0.20.0",
     "cue-parser": "^0.3.0",
     "data-uri-to-buffer": "^4.0.0",
     "electron-is-dev": "^2.0.0",
@@ -115,6 +116,7 @@
     "lodash": "^4.17.19",
     "mime-types": "^2.1.14",
     "morgan": "^1.10.0",
+    "node-adodb": "^5.0.3",
     "semver": "^7.5.2",
     "string-to-stream": "^1.1.1",
     "strtok3": "^6.0.0",
@@ -164,6 +166,10 @@
         {
           "from": "ffmpeg/darwin-${arch}",
           "to": "."
+        },
+        {
+          "from": "./node_modules/node-adodb/lib/adodb.js",
+          "to": "adodb.js"
         }
       ],
       "icon": "icon-build/app.icns",
@@ -284,6 +290,10 @@
         {
           "from": "ffmpeg/win32-${arch}/lib",
           "to": "."
+        },
+        {
+          "from": "./node_modules/node-adodb/lib/adodb.js",
+          "to": "adodb.js"
         }
       ],
       "icon": "icon-build/app.ico",
@@ -396,6 +406,10 @@
         {
           "from": "ffmpeg/linux-${arch}/lib",
           "to": "."
+        },
+        {
+          "from": "./node_modules/node-adodb/lib/adodb.js",
+          "to": "adodb.js"
         }
       ],
       "category": "AudioVideo",

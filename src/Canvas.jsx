@@ -1,12 +1,15 @@
 import React, { memo, useEffect, useRef, useMemo } from 'react';
 import { useDebounce } from 'use-debounce';
 
+import { Html5Qrcode } from '../html5-qrcode/src/html5-qrcode';
+
 import CanvasPlayer from './CanvasPlayer';
 
-const Canvas = memo(({ rotate, filePath, width, height, playerTime, streamIndex, commandedTime, playing, eventId }) => {
+const Canvas = memo(({ rotate, filePath, width, height, playerTime, streamIndex, commandedTime, playing, eventId, gotQR, setGotQR }) => {
   const canvasRef = useRef();
 
-  const canvasPlayer = useMemo(() => CanvasPlayer({ path: filePath, width, height, streamIndex, getCanvas: () => canvasRef.current }), [filePath, width, height, streamIndex]);
+  const canvasPlayer = useMemo(() => CanvasPlayer({ path: filePath, width, height, streamIndex, getCanvas: () => canvasRef.current }, gotQR, setGotQR), [filePath, width, height, streamIndex]);
+
 
   useEffect(() => () => {
     canvasPlayer.terminate();
@@ -14,6 +17,7 @@ const Canvas = memo(({ rotate, filePath, width, height, playerTime, streamIndex,
 
   const state = useMemo(() => {
     if (playing) {
+      console.log('Playing Video, Frame', playerTime)
       return { startTime: commandedTime, playing, eventId };
     }
     return { startTime: playerTime, playing, eventId };
@@ -35,7 +39,7 @@ const Canvas = memo(({ rotate, filePath, width, height, playerTime, streamIndex,
     // console.log('debouncedState', debouncedState);
 
     if (debouncedState.startTime == null) return;
-
+  
     if (debouncedState.playing) {
       canvasPlayer.play(debouncedState.startTime);
     } else {

@@ -31,6 +31,7 @@ import { UserSettingsContext, SegColorsContext } from './contexts';
 
 import NoFileLoaded from './NoFileLoaded';
 import Canvas from './Canvas';
+import QrReader from './QrReader';
 import TopMenu from './TopMenu';
 import Sheet from './components/Sheet';
 import LastCommandsSheet from './LastCommandsSheet';
@@ -91,7 +92,6 @@ const { parse: parsePath, join: pathJoin, basename, dirname } = window.require('
 
 const remote = window.require('@electron/remote');
 const { focusWindow, hasDisabledNetworking, quitApp } = remote.require('./electron');
-
 
 const calcShouldShowWaveform = (zoomedDuration) => (zoomedDuration != null && zoomedDuration < ffmpegExtractWindow * 8);
 const calcShouldShowKeyframes = (zoomedDuration) => (zoomedDuration != null && zoomedDuration < ffmpegExtractWindow * 8);
@@ -176,6 +176,9 @@ const App = memo(() => {
     workingRef.current = val;
     setWorkingState(val);
   }, []);
+
+  // Store QR Code Found in Video
+  const [gotQR, setGotQR] = useState(false);
 
   useEffect(() => setDocumentTitle({ filePath, working, cutProgress }), [cutProgress, filePath, working]);
 
@@ -742,6 +745,7 @@ const App = memo(() => {
     setOutputPlaybackRateState(1);
 
     cancelRenderThumbnails();
+    setGotQR(false);
   }, [cutSegmentsHistory, clearSegments, setFileFormat, setDetectedFileFormat, setDeselectedSegmentIds, cancelRenderThumbnails]);
 
 
@@ -1808,6 +1812,7 @@ const App = memo(() => {
     const firstFilePath = filePaths[0];
 
     if (workingRef.current) return;
+
     try {
       setWorking(i18n.t('Loading file'));
 
@@ -2356,7 +2361,8 @@ const App = memo(() => {
                     {renderSubtitles()}
                   </video>
 
-                  {canvasPlayerEnabled && <Canvas rotate={effectiveRotation} filePath={filePath} width={mainVideoStream.width} height={mainVideoStream.height} streamIndex={mainVideoStream.index} playerTime={playerTime} commandedTime={commandedTime} playing={playing} eventId={canvasPlayerEventId} />}
+                  {canvasPlayerEnabled && <Canvas rotate={effectiveRotation} filePath={filePath} width={mainVideoStream.width} height={mainVideoStream.height} streamIndex={mainVideoStream.index} playerTime={playerTime} commandedTime={commandedTime} playing={playing} eventId={canvasPlayerEventId} gotQR={gotQR} setGotQR={setGotQR} />}
+                  {!canvasPlayerEnabled && <QrReader rotate={effectiveRotation} filePath={filePath} playerTime={playerTime} commandedTime={commandedTime} playing={playing} gotQR={gotQR} setGotQR={setGotQR} />}
                 </div>
 
                 {bigWaveformEnabled && <BigWaveform waveforms={waveforms} relevantTime={relevantTime} playing={playing} durationSafe={durationSafe} zoom={zoomUnrounded} seekRel={seekRel} />}
@@ -2512,6 +2518,13 @@ const App = memo(() => {
                 setDarkMode={setDarkMode}
                 outputPlaybackRate={outputPlaybackRate}
                 setOutputPlaybackRate={setOutputPlaybackRate}
+
+                filePath={filePath}
+                duration={duration}
+                workingRef={workingRef}
+                updateSegAtIndex={updateSegAtIndex}
+                playerTime={playerTime}
+                addSegment={addSegment}
               />
             </div>
 

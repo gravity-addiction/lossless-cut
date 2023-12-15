@@ -1827,6 +1827,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@zxing/library@npm:^0.20.0":
+  version: 0.20.0
+  resolution: "@zxing/library@npm:0.20.0"
+  dependencies:
+    "@zxing/text-encoding": ~0.9.0
+    ts-custom-error: ^3.2.1
+  dependenciesMeta:
+    "@zxing/text-encoding":
+      optional: true
+  checksum: ba2d0e4d6213e74426fdaf096cd8af14f1c28c6d5d872e42d363ee67507d2b1d1c3a777395522df116670e5fdf59d799b48533465c7311ee09bb8ba3fbbd0e69
+  languageName: node
+  linkType: hard
+
+"@zxing/text-encoding@npm:~0.9.0":
+  version: 0.9.0
+  resolution: "@zxing/text-encoding@npm:0.9.0"
+  checksum: c23b12aee7639382e4949961304a1294776afaffa40f579e09ffecd0e5e68cf26ef3edd75009de46da8a536e571448755ca68b3e2ea707d53793c0edb2e2c34a
+  languageName: node
+  linkType: hard
+
 "abbrev@npm:^1.0.0":
   version: 1.1.1
   resolution: "abbrev@npm:1.1.1"
@@ -2091,6 +2111,13 @@ __metadata:
   version: 2.0.0
   resolution: "aproba@npm:2.0.0"
   checksum: 5615cadcfb45289eea63f8afd064ab656006361020e1735112e346593856f87435e02d8dcc7ff0d11928bc7d425f27bc7c2a84f6c0b35ab0ff659c814c138a24
+  languageName: node
+  linkType: hard
+
+"arch@npm:^2.1.1":
+  version: 2.2.0
+  resolution: "arch@npm:2.2.0"
+  checksum: e21b7635029fe8e9cdd5a026f9a6c659103e63fff423834323cdf836a1bb240a72d0c39ca8c470f84643385cf581bd8eda2cad8bf493e27e54bd9783abe9101f
   languageName: node
   linkType: hard
 
@@ -6554,6 +6581,7 @@ __metadata:
     "@radix-ui/react-switch": ^1.0.1
     "@types/sortablejs": ^1.15.0
     "@vitejs/plugin-react": ^3.1.0
+    "@zxing/library": ^0.20.0
     color: ^3.1.0
     concurrently: ^6.0.0
     cross-env: ^7.0.3
@@ -6596,6 +6624,7 @@ __metadata:
     mkdirp: ^1.0.3
     morgan: ^1.10.0
     mousetrap: ^1.6.5
+    node-adodb: ^5.0.3
     p-map: ^5.5.0
     pify: ^5.0.0
     pretty-bytes: ^6.0.0
@@ -7179,6 +7208,17 @@ __metadata:
   dependencies:
     node-gyp: latest
   checksum: 3a539510e677cfa3a833aca5397300e36141aca064cdc487554f2017110709a03a95da937e98c2a14ec3c626af7b2d1b6dabe629a481f9883143d0d5bff07bf2
+  languageName: node
+  linkType: hard
+
+"node-adodb@npm:^5.0.3":
+  version: 5.0.3
+  resolution: "node-adodb@npm:5.0.3"
+  dependencies:
+    arch: ^2.1.1
+    debug: ^4.1.1
+  checksum: fa3947303b6eda094d9f69c91aec5ce585df3c34c82216adaa8a5a1ed855a8ad35f4807fb44a6bf5c00746cf1a45b78eb80201d3bb98a34cc53c1f17e25ac399
+  conditions: os=win32
   languageName: node
   linkType: hard
 
@@ -9735,6 +9775,13 @@ __metadata:
   dependencies:
     utf8-byte-length: ^1.0.1
   checksum: ad097314709ea98444ad9c80c03aac8da805b894f37ceb5685c49ad297483afe3a5ec9572ebcaff699dda72b6cd447a2ba2a3fd10e96c2628cd16d94abeb328a
+  languageName: node
+  linkType: hard
+
+"ts-custom-error@npm:^3.2.1":
+  version: 3.3.1
+  resolution: "ts-custom-error@npm:3.3.1"
+  checksum: 50a1e825fced68d70049bd8d282379a635e43aa023a370fa8e736b12a6edba7f18a2d731fa194ac35303a8b625be56e121bdb31d8a0318250d1a8b277059fce3
   languageName: node
   linkType: hard
 

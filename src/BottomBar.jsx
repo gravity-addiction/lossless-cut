@@ -24,6 +24,8 @@ import { formatDuration, parseDuration, isExactDurationMatch } from './util/dura
 import useUserSettings from './hooks/useUserSettings';
 import { askForPlaybackRate } from './dialogs';
 
+import SDOB from './SDOB';
+
 const { clipboard } = window.require('electron');
 
 
@@ -146,6 +148,7 @@ const BottomBar = memo(({
   darkMode, setDarkMode,
   toggleEnableThumbnails, toggleWaveformMode, waveformMode, showThumbnails,
   outputPlaybackRate, setOutputPlaybackRate,
+  filePath, duration, workingRef, updateSegAtIndex, playerTime, addSegment
 }) => {
   const { t } = useTranslation();
   const { getSegColor } = useSegColors();
@@ -398,6 +401,7 @@ const BottomBar = memo(({
           </>
         )}
 
+        <SDOB filePath={filePath} duration={duration} workingRef={workingRef} playerTime={playerTime} updateSegAtIndex={updateSegAtIndex} setCurrentSegIndex={setCurrentSegIndex} addSegment={addSegment} cutSegments={cutSegments}></SDOB>
         <div style={{ flexGrow: 1 }} />
 
         {hasVideo && (
