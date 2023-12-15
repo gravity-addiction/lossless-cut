@@ -6651,6 +6651,7 @@ __metadata:
     vite: ^4.1.5
     vitest: ^0.28.5
     wait-on: ^7.0.1
+    winreg: ^1.2.5
     winston: ^3.8.1
     yargs-parser: ^21.0.0
   languageName: unknown
@@ -10438,6 +10439,13 @@ __metadata:
   dependencies:
     string-width: ^1.0.2 || 2 || 3 || 4
   checksum: d5fc37cd561f9daee3c80e03b92ed3e84d80dde3365a8767263d03dacfc8fa06b065ffe1df00d8c2a09f731482fcacae745abfbb478d4af36d0a891fad4834d3
+  languageName: node
+  linkType: hard
+
+"winreg@npm:^1.2.5":
+  version: 1.2.5
+  resolution: "winreg@npm:1.2.5"
+  checksum: 4bc0f8328ec814bdc7a6029354aebfdf090469d9f31fcaa85c3536b07289c3346d5606552351848bd9bd0af71a58c4a3cfa63760d842c9da1a8a99b9d2d443ab
   languageName: node
   linkType: hard
 

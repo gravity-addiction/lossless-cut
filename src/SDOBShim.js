@@ -1,22 +1,47 @@
+import React, { useEffect, useMemo } from 'react';
 
-// const ADODB = require('node-adodb');
-
-const mdbFile = '/Users/gary/Development/sdob-scoring-project/2023-Collegiate.mdb';
+const ADODB = require('node-adodb');
+const Registry = require('winreg')
+const OSHDRegKey = '\\Software\\OSHD';
+// const mdbFile = 'C:\\OSHD_Data\\Database\\2023-Collegiate.mdb';
+// const mdbFile = '\\\\WEASELBEAR\\OSHD_Data\\Database\\2023-Collegiate.mdb';
 
 export default () => {
+  const regKey = new Registry({ hive: Registry.HKCU, key: OSHDRegKey });
+  let regKeys;
+  let connection;
 
   // const connection = ADODB.open(`Provider=Microsoft.Jet.OLEDB.4.0;Data Source=${mdbFile};`);
+  regKey.values((err, items) => {
+    if (err)
+      console.log('ERROR: '+err);
+    else
+      regKeys = items.reduce((t, c) => {
+        t[c.name] = c.value
+        return t;
+      }, {});
+
+      if (regKeys.hasOwnProperty('Database') && regKeys.Database) {
+        connection = ADODB.open(`Provider=Microsoft.Jet.OLEDB.4.0;Data Source=${regKeys.Database};`);
+        connection.query(`SELECT * FROM Teams`).then(console.log).catch(console.error);
+      }
+  });
 
   function getEventList() {
     
   }
-  function getTeams() {
+
+  function getTeams(compEventId) {
+    if (!connection) {
+      console.log('No DB Connection Yet')
+      return 1
+    }
     // Query
-    // return connection
-    // .query('SELECT * FROM Teams')
+    return connection.query(`SELECT * FROM Teams WHERE CompEventID = ${compEventId}`);
   }
 
 
+  
   // function sdobGetEventList() {
   //   if (!sdobAPIServer) { return; }
 

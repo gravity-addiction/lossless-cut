@@ -4,7 +4,10 @@ import { primaryTextColor, primaryColor } from './colors';
 import { isDurationValid } from './segments';
 import SDOBShim from './SDOBShim';
 
-const SDOB = memo(({ filePath, duration, playerTime, workingRef, updateSegAtIndex, cutSegments, setCurrentSegIndex, addSegment }) => {
+const SDOB = memo(({
+  filePath, duration, playerTime, workingRef, 
+  updateSegAtIndex, cutSegments, setCurrentSegIndex, addSegment 
+}) => {
   const sdobRef = useRef();
 
   const sdobShim = useMemo(() => SDOBShim(), []);
@@ -18,8 +21,9 @@ const SDOB = memo(({ filePath, duration, playerTime, workingRef, updateSegAtInde
     //   return;
     // }
 
-    const myTeams = sdobShim.getTeams();
-    console.log('Teams', myTeams);
+    const myTeams = sdobShim.getTeams().then(t => {
+      console.log('GG', t);
+    }).catch(err => { console.log(err); })
     // const slateSegment = (myComp.segments || []).find((seg) => seg.name == 'slate');
     // console.log('Got Slate Seg', slateSegment);
     // if (!slateSegment) {
@@ -27,15 +31,11 @@ const SDOB = memo(({ filePath, duration, playerTime, workingRef, updateSegAtInde
     //   return;
     // }
     const slateSegment = { pre: 2, post: 3 };
-    console.log(playerTime);
-    console.log(duration);
-    if (cutSegments && cutSegments.length < 1) {
-      addSegment();
-    }
 
     try {
       setCurrentSegIndex(0);
       updateSegAtIndex(0, {
+        name: 'slate',
         start: Math.min(Math.max(playerTime - slateSegment.pre, 0), duration),
         end: Math.min(Math.max(playerTime + slateSegment.post, 0), duration)
       });
@@ -67,21 +67,21 @@ const SDOB = memo(({ filePath, duration, playerTime, workingRef, updateSegAtInde
     // }
 
     const exitSegment = { pre: 5, post: 40 };
-    if (cutSegments && cutSegments.length < 1) {
-      addSegment();
+    try {
+      setCurrentSegIndex(1);
+      updateSegAtIndex(1, {
+        name: 'working_time',
+        start: Math.min(Math.max(playerTime - exitSegment.pre, 0), duration),
+        end: Math.min(Math.max(playerTime + exitSegment.post, 0), duration)
+      });
+      console.log('X2', cutSegments);
+    } catch (err) {
+      console.log(err.message);
     }
-    if (cutSegments && cutSegments.length < 2) {
-      addSegment();
-    }
-    setCurrentSegIndex(1);
-    updateSegAtIndex(1, {
-      start: Math.min(Math.max(playerTime - exitSegment.pre, 0), duration),
-      end: Math.min(Math.max(playerTime + exitSegment.post, 0), duration)
-    });
   }, [workingRef, filePath, duration, cutSegments, setCurrentSegIndex, updateSegAtIndex, playerTime, addSegment]);
 
   return (
-    <div class="d-flex flex-direction-row">
+    <div className="d-flex flex-direction-row">
       <div
         style={{ cursor: 'pointer', background: primaryColor, borderRadius: 5, paddingTop: 1, paddingBottom: 2.5, paddingLeft: 7, paddingRight: 7, fontSize: 13, marginRight: 5 }}
         onClick={onSdobSetSlate}
