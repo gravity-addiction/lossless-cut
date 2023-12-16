@@ -137,39 +137,38 @@ const SDOB = memo(({
   }, [workingRef, filePath, duration, cutSegments, setCurrentSegIndex, updateSegAtIndex, playerTime, addSegment]);
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px' }}>
+    <div style={{ height: '3rem', fontSize: '3rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px' }}>
       <div
-        style={{ cursor: 'pointer', background: primaryColor, borderRadius: 5, paddingTop: 1, paddingBottom: 2.5, paddingLeft: 7, paddingRight: 7, fontSize: 13, marginRight: 5 }}
+        style={{ height: '3rem', whiteSpace: 'nowrap', cursor: 'pointer', background: primaryColor, borderRadius: 5, paddingTop: 1, paddingBottom: 2.5, paddingLeft: 7, paddingRight: 7, fontSize: '2rem', marginRight: 5, alignItems: 'center' }}
         onClick={onSdobSetSlate}
         title="Set Slate"
         role="button"
-      >Set Slate</div>
+      >Slate</div>
       <div
-        style={{ cursor: 'pointer', background: primaryColor, borderRadius: 5, paddingTop: 1, paddingBottom: 2.5, paddingLeft: 7, paddingRight: 7, fontSize: 13, marginRight: 5 }}
+        style={{ height: '3rem', whiteSpace: 'nowrap', cursor: 'pointer', background: primaryColor, borderRadius: 5, paddingTop: 1, paddingBottom: 2.5, paddingLeft: 7, paddingRight: 7, fontSize: '2rem', marginRight: 5 }}
         onClick={onSdobSetExitPress}
         title="Set Exit"
         role="button"
-      >Set Exit</div>
+      >Exit</div>
 
-      <Select style={{ height: 20, flexBasis: 85, flexGrow: 0 }} value={SDOBEvents.includes(SDOBSelectedEvent) ? SDOBSelectedEvent.toString() : ''} onChange={withBlur(e => setSDOBSelectedEvent(e.target.value))}>
+      <Select style={{ height: '3rem', maxWidth: '30vw', flexBasis: 85, flexGrow: 0 }} value={SDOBEvents.includes(SDOBSelectedEvent) ? SDOBSelectedEvent.toString() : ''} onChange={withBlur(e => setSDOBSelectedEvent(e.target.value))}>
         <option key="" value="" disabled>{SDOBSelectedEvent}</option>
         {SDOBEvents.map(val => (
           <option key={val} value={String(val)}>{val}</option>
         ))}
       </Select>
 
-      
-      <Select style={{ height: 20, flexBasis: 85, flexGrow: 0 }} value={SDOBTeams.map(ct => getTeamKey(ct)).includes(getTeamKey(SDOBSelectedTeam)) ? getTeamKey(SDOBSelectedTeam) : ''} onChange={withBlur(e => setSDOBSelectedTeam(findTeamKey(e.target.value)))}>
-        <option key="" value="" disabled>{SDOBSelectedTeam.TeamNumber} - {SDOBSelectedTeam.TeamName}</option>
-        {SDOBTeams.map(val => (
-          <option key={getTeamKey(val)} value={getTeamKey(val)}>{val.TeamNumber} - {val.TeamName}</option>
-        ))}
-      </Select>
-
-      <Select style={{ height: 20, flexBasis: 85, flexGrow: 0 }} value={SDOBRounds.includes(SDOBSelectedRound) ? SDOBSelectedRound : ''} onChange={withBlur(e => setSDOBSelectedRound(e.target.value))}>
+      <Select style={{ height: '3rem', flexBasis: 85, flexGrow: 0 }} value={SDOBRounds.includes(SDOBSelectedRound) ? SDOBSelectedRound : ''} onChange={withBlur(e => setSDOBSelectedRound(e.target.value))}>
         <option key="" value="" disabled>{SDOBSelectedRound}</option>
         {SDOBRounds.map(val => (
           <option key={val} value={String(val)}>{val}</option>
+        ))}
+      </Select>
+
+      <Select style={{ height: '3rem', flexBasis: 85, flexGrow: 0 }} value={SDOBTeams.map(ct => getTeamKey(ct)).includes(getTeamKey(SDOBSelectedTeam)) ? getTeamKey(SDOBSelectedTeam) : ''} onChange={withBlur(e => setSDOBSelectedTeam(findTeamKey(e.target.value)))}>
+        <option key="" value="" disabled>{SDOBSelectedTeam.TeamNumber} - {SDOBSelectedTeam.TeamName}</option>
+        {SDOBTeams.map(val => (
+          <option key={getTeamKey(val)} value={getTeamKey(val)}>{val.TeamNumber} - {val.TeamName}</option>
         ))}
       </Select>
     </div>
