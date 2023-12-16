@@ -171,6 +171,10 @@
         {
           "from": "./node_modules/node-adodb/lib/adodb.js",
           "to": "adodb.js"
+        },
+        {
+          "from": "./node_modules/winreg/lib/registry.js",
+          "to": "registry.js"
         }
       ],
       "icon": "icon-build/app.icns",
@@ -295,6 +299,10 @@
         {
           "from": "./node_modules/node-adodb/lib/adodb.js",
           "to": "adodb.js"
+        },
+        {
+          "from": "./node_modules/winreg/lib/registry.js",
+          "to": "registry.js"
         }
       ],
       "icon": "icon-build/app.ico",
@@ -411,6 +419,10 @@
         {
           "from": "./node_modules/node-adodb/lib/adodb.js",
           "to": "adodb.js"
+        },
+        {
+          "from": "./node_modules/winreg/lib/registry.js",
+          "to": "registry.js"
         }
       ],
       "category": "AudioVideo",
