@@ -27,6 +27,17 @@ export default () => {
       }
   });
 
+  function getComps(compName) {
+    if (!connection) {
+      console.log('No DB Connection Yet')
+      return 1
+    }
+    // Query
+    return connection.query(`SELECT *
+      FROM EventDefinitions INNER JOIN CompEvents ON EventDefinitions.EventName = CompEvents.EventName
+      WHERE CompEvents.CompName="${compName}"; = `);
+  }
+
   function getEventList() {
     
   }
@@ -39,6 +50,8 @@ export default () => {
     // Query
     return connection.query(`SELECT * FROM Teams WHERE CompEventID = ${compEventId}`);
   }
+
+
 
 
   
@@ -72,6 +85,7 @@ export default () => {
   // };
 
   return {
+    getComps,
     getEventList,
     getTeams
   };

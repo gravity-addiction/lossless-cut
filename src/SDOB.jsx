@@ -2,7 +2,7 @@ import React, { memo, useCallback, useRef, useMemo } from 'react';
 import { useDebounce } from 'use-debounce';
 import { primaryTextColor, primaryColor } from './colors';
 import { isDurationValid } from './segments';
-import SDOBShim from './SDOBShim';
+import OSHDShim from './OSHDShim';
 
 const SDOB = memo(({
   filePath, duration, playerTime, workingRef, 
@@ -10,7 +10,7 @@ const SDOB = memo(({
 }) => {
   const sdobRef = useRef();
 
-  const sdobShim = useMemo(() => SDOBShim(), []);
+  const oshdShim = useMemo(() => OSHDShim(), []);
   const onSdobSetSlate = useCallback(async () => {
     if (workingRef.current || !filePath || !isDurationValid(duration)) {
       return;
@@ -21,7 +21,7 @@ const SDOB = memo(({
     //   return;
     // }
 
-    const myTeams = sdobShim.getTeams().then(t => {
+    const myTeams = oshdShim.getTeams().then(t => {
       console.log('GG', t);
     }).catch(err => { console.log(err); })
     // const slateSegment = (myComp.segments || []).find((seg) => seg.name == 'slate');

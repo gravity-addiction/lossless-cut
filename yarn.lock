@@ -6624,7 +6624,7 @@ __metadata:
     mkdirp: ^1.0.3
     morgan: ^1.10.0
     mousetrap: ^1.6.5
-    node-adodb: ^5.0.3
+    node-adodb: "file:./node-adodb"
     p-map: ^5.5.0
     pify: ^5.0.0
     pretty-bytes: ^6.0.0
@@ -7212,16 +7212,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-adodb@npm:^5.0.3":
-  version: 5.0.3
-  resolution: "node-adodb@npm:5.0.3"
+"node-adodb@portal:/C:/Users/Gary Taylor/Development/lossless-cut/node-adodb::locator=lossless-cut%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "node-adodb@portal:/C:/Users/Gary Taylor/Development/lossless-cut/node-adodb::locator=lossless-cut%40workspace%3A."
   dependencies:
     arch: ^2.1.1
     debug: ^4.1.1
-  checksum: fa3947303b6eda094d9f69c91aec5ce585df3c34c82216adaa8a5a1ed855a8ad35f4807fb44a6bf5c00746cf1a45b78eb80201d3bb98a34cc53c1f17e25ac399
   conditions: os=win32
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "node-fetch@npm:^1.0.1":
   version: 1.7.3
