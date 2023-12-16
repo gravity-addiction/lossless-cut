@@ -6,16 +6,16 @@ const OSHDRegKey = '\\Software\\OSHD';
 // const mdbFile = 'C:\\OSHD_Data\\Database\\2023-Collegiate.mdb';
 // const mdbFile = '\\\\WEASELBEAR\\OSHD_Data\\Database\\2023-Collegiate.mdb';
 
-export default () => {
+export default ({ setOSHDRegKeys }) => {
+
   const regKey = new Registry({ hive: Registry.HKCU, key: OSHDRegKey });
   let regKeys;
   let connection;
 
-  // const connection = ADODB.open(`Provider=Microsoft.Jet.OLEDB.4.0;Data Source=${mdbFile};`);
   regKey.values((err, items) => {
-    if (err)
-      console.log('ERROR: '+err);
-    else
+    if (err) {
+      console.error(err);
+    } else {
       regKeys = items.reduce((t, c) => {
         t[c.name] = c.value
         return t;
@@ -23,32 +23,59 @@ export default () => {
 
       if (regKeys.hasOwnProperty('Database') && regKeys.Database) {
         connection = ADODB.open(`Provider=Microsoft.Jet.OLEDB.4.0;Data Source=${regKeys.Database};`);
-        connection.query(`SELECT * FROM Teams`).then(console.log).catch(console.error);
+        if (!connection) {
+          console.error('DB Connection Unavailable');
+        }
+        setOSHDRegKeys(regKeys);
       }
+    }
   });
 
-  function getComps(compName) {
-    if (!connection) {
-      console.log('No DB Connection Yet')
-      return 1
-    }
-    // Query
-    return connection.query(`SELECT *
-      FROM EventDefinitions INNER JOIN CompEvents ON EventDefinitions.EventName = CompEvents.EventName
-      WHERE CompEvents.CompName="${compName}"; = `);
+  const getCompTeams = async ({ CompName }) => {
+    const compInfo = await getComp({ CompName }).catch(console.error);
+    const compEvents = await getEvents({ CompName }).catch(console.error);
+    const compTeams = await getTeams({ CompName }).catch(console.error);
+    return { compInfo, compEvents, compTeams };
   }
 
-  function getEventList() {
-    
+  const getRegKeys = () => {
+    return regKeys;
   }
 
-  function getTeams(compEventId) {
+  const getComp = ({ CompName }) => {
     if (!connection) {
       console.log('No DB Connection Yet')
-      return 1
+      return Promise.reject('No DB Connection');
     }
-    // Query
-    return connection.query(`SELECT * FROM Teams WHERE CompEventID = ${compEventId}`);
+    if (!CompName) {
+      return Promise.reject('No CompName');
+    }
+  
+    return connection.query(`SELECT * FROM Competitions WHERE CompName = '${String(CompName).replaceAll("'", "''")}'`);
+  }
+
+  const getEvents = ({ CompName }) => {
+    if (!connection) {
+      console.log('No DB Connection Yet')
+      return Promise.reject('No DB Connection');
+    }
+    if (!CompName) {
+      return Promise.reject('No CompName');
+    }
+
+    return connection.query(`SELECT * FROM EventDefinitions INNER JOIN CompEvents ON EventDefinitions.EventName = CompEvents.EventName WHERE CompEvents.CompName='${String(CompName).replaceAll("'", "''")}';`);
+  }
+
+  const getTeams = ({ CompName }) => {
+    if (!connection) {
+      console.log('No DB Connection Yet')
+      return Promise.reject('No DB Connection');
+    }
+    if (!CompName) {
+      return Promise.reject('No CompName');
+    }
+
+    return connection.query(`SELECT * FROM Teams WHERE CompEventID = ANY(SELECT ID FROM EventDefinitions INNER JOIN CompEvents ON EventDefinitions.EventName = CompEvents.EventName WHERE CompEvents.CompName='${String(CompName).replaceAll("'", "''")}')`);
   }
 
 
@@ -85,9 +112,8 @@ export default () => {
   // };
 
   return {
-    getComps,
-    getEventList,
-    getTeams
+    getCompTeams,
+    getRegKeys
   };
 };
 

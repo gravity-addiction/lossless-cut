@@ -1,8 +1,10 @@
-import React, { memo, useCallback, useRef, useMemo } from 'react';
+import React, { memo, useCallback, useRef, useMemo, useState, useEffect } from 'react';
 import { useDebounce } from 'use-debounce';
 import { primaryTextColor, primaryColor } from './colors';
+import Select from './components/Select';
 import { isDurationValid } from './segments';
 import OSHDShim from './OSHDShim';
+import { withBlur, mirrorTransform, checkAppPath } from './util';
 
 const SDOB = memo(({
   filePath, duration, playerTime, workingRef, 
@@ -10,7 +12,64 @@ const SDOB = memo(({
 }) => {
   const sdobRef = useRef();
 
-  const oshdShim = useMemo(() => OSHDShim(), []);
+  const [OSHDCompName, setOSHDCompName] = useState('');
+  const [OSHDCompEvent, setOSHDCompEvent] = useState('');
+  const [OSHDRegKeys, setOSHDRegKeys] = useState({});
+  
+  const [SDOBEvents, setSDOBEvents] = useState([]);
+  const [SDOBTeams, setSDOBTeams] = useState([]);
+  const [SDOBRounds, setSDOBRounds] = useState([1,2,3,4,5,6]);
+  const [SDOBSelectedEvent, setSDOBSelectedEvent] = useState('');
+  const [SDOBSelectedTeam, setSDOBSelectedTeam] = useState('');
+  const [SDOBSelectedRound, setSDOBSelectedRound] = useState(1);
+
+  const [CompInfo, setCompInfo] = useState({});
+  const [CompEvents, setCompEvents] = useState([]);
+  const [CompTeams, setCompTeams] = useState([]);
+
+  const oshdShim = useMemo(() => OSHDShim({ setOSHDRegKeys }), []);
+
+  // oshdShim.getCompTeams(oshdShim.regKeys.CompName);
+
+  useEffect(() => {
+    const fetchTeams = async () => {
+      // Fetch Teams
+      console.log('Fetching Info', OSHDRegKeys.CompName)
+      const { compInfo, compEvents, compTeams } = await oshdShim.getCompTeams({ CompName: OSHDRegKeys.CompName });
+      if (compInfo && Array.isArray(compInfo) && compInfo.length) {
+        setCompInfo(compInfo[0]);
+        setCompEvents(compEvents);
+        setCompTeams(compTeams);
+      }
+      
+      const eventList = compEvents.filter(e => e.Active).
+        filter(e => e.IPCDiscipline === 'FS' || e.IPCDiscipline === 'Speed' || e.IPCDiscipline === 'CF' || e.IPCDiscipline === 'Artistic').
+        map(e => e['CompEvents.EventName'])
+
+      setSDOBEvents(eventList);
+      if (!SDOBSelectedEvent && eventList.length) {
+        setSDOBSelectedEvent(eventList[0]);
+      }
+    };
+    if (OSHDRegKeys && OSHDRegKeys.CompName) {
+      fetchTeams();
+    }
+  }, [OSHDRegKeys]);
+
+  useEffect(() => {
+    const compEventInfo = CompEvents.find(e => e['CompEvents.EventName'] === SDOBSelectedEvent);
+    setSDOBSelectedTeam('');
+    setSDOBTeams(CompTeams.filter(c => c.CompEventID === compEventInfo.ID));
+  }, [SDOBSelectedEvent]);
+
+  useEffect(() => {
+    console.log('Team', SDOBSelectedTeam);
+  }, [SDOBSelectedTeam]);
+
+
+  const getTeamKey = (val) => (`${val.CompEventID}T${val.TeamNumber}`);
+  const findTeamKey = (key) => CompTeams.find(val => key === getTeamKey(val));
+
   const onSdobSetSlate = useCallback(async () => {
     if (workingRef.current || !filePath || !isDurationValid(duration)) {
       return;
@@ -21,9 +80,7 @@ const SDOB = memo(({
     //   return;
     // }
 
-    const myTeams = oshdShim.getTeams().then(t => {
-      console.log('GG', t);
-    }).catch(err => { console.log(err); })
+
     // const slateSegment = (myComp.segments || []).find((seg) => seg.name == 'slate');
     // console.log('Got Slate Seg', slateSegment);
     // if (!slateSegment) {
@@ -74,14 +131,13 @@ const SDOB = memo(({
         start: Math.min(Math.max(playerTime - exitSegment.pre, 0), duration),
         end: Math.min(Math.max(playerTime + exitSegment.post, 0), duration)
       });
-      console.log('X2', cutSegments);
     } catch (err) {
       console.log(err.message);
     }
   }, [workingRef, filePath, duration, cutSegments, setCurrentSegIndex, updateSegAtIndex, playerTime, addSegment]);
 
   return (
-    <div className="d-flex flex-direction-row">
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px' }}>
       <div
         style={{ cursor: 'pointer', background: primaryColor, borderRadius: 5, paddingTop: 1, paddingBottom: 2.5, paddingLeft: 7, paddingRight: 7, fontSize: 13, marginRight: 5 }}
         onClick={onSdobSetSlate}
@@ -94,6 +150,28 @@ const SDOB = memo(({
         title="Set Exit"
         role="button"
       >Set Exit</div>
+
+      <Select style={{ height: 20, flexBasis: 85, flexGrow: 0 }} value={SDOBEvents.includes(SDOBSelectedEvent) ? SDOBSelectedEvent.toString() : ''} onChange={withBlur(e => setSDOBSelectedEvent(e.target.value))}>
+        <option key="" value="" disabled>{SDOBSelectedEvent}</option>
+        {SDOBEvents.map(val => (
+          <option key={val} value={String(val)}>{val}</option>
+        ))}
+      </Select>
+
+      
+      <Select style={{ height: 20, flexBasis: 85, flexGrow: 0 }} value={SDOBTeams.map(ct => getTeamKey(ct)).includes(getTeamKey(SDOBSelectedTeam)) ? getTeamKey(SDOBSelectedTeam) : ''} onChange={withBlur(e => setSDOBSelectedTeam(findTeamKey(e.target.value)))}>
+        <option key="" value="" disabled>{SDOBSelectedTeam.TeamNumber} - {SDOBSelectedTeam.TeamName}</option>
+        {SDOBTeams.map(val => (
+          <option key={getTeamKey(val)} value={getTeamKey(val)}>{val.TeamNumber} - {val.TeamName}</option>
+        ))}
+      </Select>
+
+      <Select style={{ height: 20, flexBasis: 85, flexGrow: 0 }} value={SDOBRounds.includes(SDOBSelectedRound) ? SDOBSelectedRound : ''} onChange={withBlur(e => setSDOBSelectedRound(e.target.value))}>
+        <option key="" value="" disabled>{SDOBSelectedRound}</option>
+        {SDOBRounds.map(val => (
+          <option key={val} value={String(val)}>{val}</option>
+        ))}
+      </Select>
     </div>
   );
 });
