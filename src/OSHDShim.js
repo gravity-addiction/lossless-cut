@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo } from 'react';
 
-const ADODB = require('node-adodb');
+const ADODB = require("node-adodb");
+if (!isAppDebug()) {
+// if (main.filename.indexOf('app.asar') !== -1) {
+  ADODB.PATH = './resources/adodb.js';
+}
 const Registry = require('winreg')
 const OSHDRegKey = '\\Software\\OSHD';
 // const mdbFile = 'C:\\OSHD_Data\\Database\\2023-Collegiate.mdb';
@@ -50,7 +54,7 @@ export default ({ setOSHDRegKeys }) => {
     if (!CompName) {
       return Promise.reject('No CompName');
     }
-  
+  console.log('Trying');
     return connection.query(`SELECT * FROM Competitions WHERE CompName = '${String(CompName).replaceAll("'", "''")}'`);
   }
 

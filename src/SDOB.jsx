@@ -34,21 +34,25 @@ const SDOB = memo(({
   useEffect(() => {
     const fetchTeams = async () => {
       // Fetch Teams
-      console.log('Fetching Info', OSHDRegKeys.CompName)
+      // console.log('Fetching Info', OSHDRegKeys.CompName)
       const { compInfo, compEvents, compTeams } = await oshdShim.getCompTeams({ CompName: OSHDRegKeys.CompName });
+      // console.log('compEvents', compEvents);
+      // console.log('compTeams', compTeams);
       if (compInfo && Array.isArray(compInfo) && compInfo.length) {
         setCompInfo(compInfo[0]);
         setCompEvents(compEvents);
         setCompTeams(compTeams);
-      }
       
-      const eventList = compEvents.filter(e => e.Active).
-        filter(e => e.IPCDiscipline === 'FS' || e.IPCDiscipline === 'Speed' || e.IPCDiscipline === 'CF' || e.IPCDiscipline === 'Artistic').
-        map(e => e['CompEvents.EventName'])
+        // console.log('compInfo', compInfo);
 
-      setSDOBEvents(eventList);
-      if (!SDOBSelectedEvent && eventList.length) {
-        setSDOBSelectedEvent(eventList[0]);
+        const eventList = compEvents.filter(e => e.Active).
+          filter(e => e.IPCDiscipline === 'FS' || e.IPCDiscipline === 'Speed' || e.IPCDiscipline === 'CF' || e.IPCDiscipline === 'Artistic').
+          map(e => e['CompEvents.EventName'])
+
+        setSDOBEvents(eventList);
+        if (!SDOBSelectedEvent && eventList.length) {
+          setSDOBSelectedEvent(eventList[0]);
+        }
       }
     };
     if (OSHDRegKeys && OSHDRegKeys.CompName) {
