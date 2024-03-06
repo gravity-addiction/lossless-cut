@@ -1,4 +1,4 @@
-import React, { memo, useState, useMemo, useCallback } from 'react';
+import { memo, useState, useMemo, useCallback } from 'react';
 
 import { FaImage, FaCheckCircle, FaPaperclip, FaVideo, FaVideoSlash, FaFileImport, FaVolumeUp, FaVolumeMute, FaBan, FaFileExport } from 'react-icons/fa';
 import { GoFileBinary } from 'react-icons/go';
@@ -34,6 +34,7 @@ const EditFileDialog = memo(({ editingFile, allFilesMeta, customTagsByFile, setC
 
   const onTagReset = useCallback((tag) => {
     setCustomTagsByFile((old) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [tag]: deleted, ...rest } = old[editingFile] || {};
       return { ...old, [editingFile]: rest };
     });
@@ -101,7 +102,8 @@ const EditStreamDialog = memo(({ editingStream: { streamId: editingStreamId, pat
   const onTagReset = useCallback((tag) => {
     updateStreamParams(editingFile, editingStreamId, (params) => {
       if (!params.has('customTags')) return;
-      // eslint-disable-next-line no-param-reassign
+      // todo
+      // eslint-disable-next-line no-param-reassign, @typescript-eslint/no-dynamic-delete
       delete params.get('customTags')[tag];
     });
   }, [editingFile, editingStreamId, updateStreamParams]);
@@ -140,6 +142,7 @@ const Stream = memo(({ filePath, stream, onToggle, batchSetCopyStreamIds, copySt
 
   let Icon;
   let codecTypeHuman;
+  // eslint-disable-next-line unicorn/prefer-switch
   if (stream.codec_type === 'audio') {
     Icon = copyStream ? FaVolumeUp : FaVolumeMute;
     codecTypeHuman = t('audio');
@@ -210,7 +213,7 @@ const Stream = memo(({ filePath, stream, onToggle, batchSetCopyStreamIds, copySt
       </td>
 
       <td style={{ display: 'flex', justifyContent: 'flex-end' }}>
-        <IconButton icon={InfoSignIcon} onClick={() => onInfoClick(stream, t('Track {{num}} info', { num: stream.index + 1 }))} appearance="minimal" iconSize={18} />
+        <IconButton icon={InfoSignIcon} title={t('Track {{num}} info', { num: stream.index + 1 })} onClick={() => onInfoClick(stream, t('Track {{num}} info', { num: stream.index + 1 }))} appearance="minimal" iconSize={18} />
 
         <Popover
           position={Position.BOTTOM_LEFT}
@@ -254,12 +257,12 @@ const FileHeading = ({ path, formatData, chapters, onTrashClick, onEditClick, se
 
       <div style={{ flexGrow: 1 }} />
 
-      <IconButton icon={InfoSignIcon} onClick={() => onInfoClick(formatData, t('File info'))} appearance="minimal" iconSize={18} />
+      <IconButton icon={InfoSignIcon} title={t('File info')} onClick={() => onInfoClick(formatData, t('File info'))} appearance="minimal" iconSize={18} />
       {chapters && chapters.length > 0 && <IconButton icon={BookIcon} onClick={() => onInfoClick(chapters, t('Chapters'))} appearance="minimal" iconSize={18} />}
-      {onEditClick && <IconButton icon={EditIcon} onClick={onEditClick} appearance="minimal" iconSize={18} />}
+      {onEditClick && <IconButton icon={EditIcon} title={t('Edit file metadata')} onClick={onEditClick} appearance="minimal" iconSize={18} />}
       {onTrashClick && <IconButton icon={TrashIcon} onClick={onTrashClick} appearance="minimal" iconSize={18} />}
-      <IconButton iconSize={18} color="#52BD95" icon={FaCheckCircle} onClick={() => setCopyAllStreams(true)} appearance="minimal" />
-      <IconButton iconSize={18} color="#D14343" icon={FaBan} onClick={() => setCopyAllStreams(false)} appearance="minimal" />
+      <IconButton iconSize={18} color="#52BD95" icon={FaCheckCircle} title={t('Keep all tracks')} onClick={() => setCopyAllStreams(true)} appearance="minimal" />
+      <IconButton iconSize={18} color="#D14343" icon={FaBan} title={t('Discard all tracks')} onClick={() => setCopyAllStreams(false)} appearance="minimal" />
       {onExtractAllStreamsPress && <IconButton iconSize={16} title={t('Export each track as individual files')} icon={ForkIcon} onClick={onExtractAllStreamsPress} appearance="minimal" />}
     </div>
   );
@@ -310,6 +313,7 @@ const StreamsSelector = memo(({
   async function removeFile(path) {
     setCopyStreamIdsForPath(path, () => ({}));
     setExternalFilesMeta((old) => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { [path]: val, ...rest } = old;
       return rest;
     });
@@ -318,6 +322,7 @@ const StreamsSelector = memo(({
   async function batchSetCopyStreamIdsForPath(path, streams, filter, enabled) {
     setCopyStreamIdsForPath(path, (old) => {
       const ret = { ...old };
+      // eslint-disable-next-line unicorn/no-array-callback-reference
       streams.filter(filter).forEach(({ index }) => {
         ret[index] = enabled;
       });
@@ -333,7 +338,7 @@ const StreamsSelector = memo(({
 
   return (
     <>
-      <p style={{ margin: '.5em 1em' }}>{t('Click to select which tracks to keep when exporting:')}</p>
+      <p style={{ margin: '.5em 2em .5em 1em' }}>{t('Click to select which tracks to keep when exporting:')}</p>
 
       <div style={fileStyle}>
         {/* We only support editing main file metadata for now */}

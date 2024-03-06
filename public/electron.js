@@ -1,6 +1,7 @@
 process.traceDeprecation = true;
 process.traceProcessWarnings = true;
 
+// eslint-disable-next-line import/no-extraneous-dependencies
 const electron = require('electron');
 const isDev = require('electron-is-dev');
 const unhandled = require('electron-unhandled');
@@ -14,7 +15,7 @@ const { stat } = require('fs/promises');
 const logger = require('./logger');
 const menu = require('./menu');
 const configStore = require('./configStore');
-const { frontendBuildDir } = require('./util');
+const { frontendBuildDir, isLinux } = require('./util');
 const attachContextMenu = require('./contextMenu');
 const HttpServer = require('./httpServer');
 
@@ -26,6 +27,11 @@ require('./i18n');
 
 const { app, ipcMain, shell, BrowserWindow, nativeTheme } = electron;
 
+// https://chromestatus.com/feature/5748496434987008
+// https://peter.sh/experiments/chromium-command-line-switches/
+// https://chromium.googlesource.com/chromium/src/+/main/third_party/blink/renderer/platform/runtime_enabled_features.json5
+app.commandLine.appendSwitch('enable-blink-features', 'AudioVideoTracks');
+
 remote.initialize();
 
 unhandled({
@@ -33,6 +39,9 @@ unhandled({
 });
 
 const appName = 'LosslessCut';
+const copyrightYear = 2024;
+
+const appVersion = app.getVersion();
 
 app.name = appName;
 
@@ -40,11 +49,21 @@ const isStoreBuild = process.windowsStore || process.mas;
 
 const showVersion = !isStoreBuild;
 
-const aboutPanelOptions = { applicationName: appName };
+/** @type import('electron').AboutPanelOptionsOptions */
+const aboutPanelOptions = {
+  applicationName: appName,
+  copyright: `Copyright © ${copyrightYear} Mikael Finstad ❤️ 🇳🇴`,
+  version: '', // not very useful (MacOS only, and same as applicationVersion)
+};
+
+// https://github.com/electron/electron/issues/18918
+// https://github.com/mifi/lossless-cut/issues/1537
+if (isLinux) {
+  aboutPanelOptions.version = appVersion;
+}
 if (!showVersion) {
-  // version will be wrong in Store builds
-  aboutPanelOptions.applicationVersion = '';
-  aboutPanelOptions.version = '';
+  // https://github.com/mifi/lossless-cut/issues/1882
+  aboutPanelOptions.applicationVersion = `${process.windowsStore ? 'Microsoft Store' : 'App Store'} edition, based on GitHub v${appVersion}`;
 }
 
 // https://www.electronjs.org/docs/latest/api/app#appsetaboutpaneloptionsoptions
@@ -126,7 +145,6 @@ function createWindow() {
   remote.enable(mainWindow.webContents);
 
   attachContextMenu(mainWindow);
-
 
   if (isDev) mainWindow.loadURL('http://localhost:3001');
   // Need to useloadFile for special characters https://github.com/mifi/lossless-cut/issues/40
@@ -281,6 +299,7 @@ function initApp() {
 // Call this immediately, to make sure we don't miss it (race condition)
 const readyPromise = app.whenReady();
 
+// eslint-disable-next-line unicorn/prefer-top-level-await
 (async () => {
   try {
     logger.info('Initializing config store');
@@ -326,8 +345,8 @@ const readyPromise = app.whenReady();
       const { default: installExtension, REACT_DEVELOPER_TOOLS } = require('electron-devtools-installer'); // eslint-disable-line global-require,import/no-extraneous-dependencies
 
       installExtension(REACT_DEVELOPER_TOOLS)
-        .then(name => logger.info('Added Extension', name))
-        .catch(err => logger.error('Failed to add extension', err));
+        .then((name) => logger.info('Added Extension', name))
+        .catch((err) => logger.error('Failed to add extension', err));
     }
 
     createWindow();

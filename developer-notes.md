@@ -21,10 +21,10 @@ Note: `yarn` may take some time to complete.
 
 Run one of the below commands:
 ```bash
-npm run download-ffmpeg-darwin-x64
-npm run download-ffmpeg-darwin-arm64
-npm run download-ffmpeg-linux-x64
-npm run download-ffmpeg-win32-x64
+yarn download-ffmpeg-darwin-x64
+yarn download-ffmpeg-darwin-arm64
+yarn download-ffmpeg-linux-x64
+yarn download-ffmpeg-win32-x64
 ```
 
 For Windows, you may have to install [7z](https://www.7-zip.org/download.html), and then put the 7z folder in your `PATH`.
@@ -32,21 +32,15 @@ For Windows, you may have to install [7z](https://www.7-zip.org/download.html), 
 ### Running
 
 ```bash
-npm start
+yarn dev
 ```
 
-### Building for production
-
-See:
-- https://www.electron.build/
-- https://github.com/mifi/lossless-cut/blob/master/.github/workflows/build.yml
-
-## Building mas-dev (Mac App Store) build locally
+## `mas-dev` (Mac App Store) local build
 
 This will sign using the development provisioning profile:
 
 ```
-npm run pack-mas-dev
+yarn pack-mas-dev
 ```
 
 MAS builds have some restrictions, see `isMasBuild` variable in code. In particular, any file cannot be read without the user's consent.
@@ -62,7 +56,7 @@ NOTE: when MAS (dev) build, Application Support will instead be here:
 rm -rf ~/Library/Containers/no.mifi.losslesscut-mac
 ```
 
-## Windows Store
+## Windows Store notes
 
 Windows store version is built as a Desktop Bridge app (with `runFullTrust` capability). This means the app has access to essentially everything the user has access to, and even `internetClient` is redundant.
 
@@ -76,15 +70,23 @@ For per-platform build/signing setup, see [this article](https://mifi.no/blog/au
 
 ### Release new version
 
-- Commit changes
+- If Mac App Store / Windows Store
+  - Checkout branch `stores`
+  - Merge `master` into `stores`
 - `npm version ...`
-- `git push && git push --tags`
+- `git push --follow-tags`
 - Wait for build and draft in Github actions
 - Open draft in github and add Release notes
 - For files `LosslessCut-mac-universal.pkg` and `LosslessCut-win-x64.appx` add prefix `-DO-NOT-DOWNLOAD`
-- Release the draft
+- If intended as Github, release the draft
+- If store-only release, release the draft as **pre-release**
+
+### After release
+
+- If Mac App Store / Windows Store
+  - Merge `stores` into `master`
 - Bump [snap version](https://snapcraft.io/losslesscut/listing)
-- `npm run scan-i18n` to get the newest English strings and push so weblate gets them
+- `yarn scan-i18n` to get the newest English strings and push so weblate gets them
 
 ## Minimum OS version
 
@@ -98,7 +100,7 @@ Minimum supported OS versions for Electron. As of electron 22:
 How to check the value:
 
 ```bash
-npm run pack-mas-dev
+yarn pack-mas-dev
 cat dist/mas-dev-arm64/LosslessCut.app/Contents/Info.plist
 ```
 
@@ -124,7 +126,7 @@ Links:
 - package.json
 
 ### i18n
-`npm run scan-i18n`
+`yarn scan-i18n`
 
 ### Licenses
 
@@ -137,7 +139,7 @@ npx license-checker --summary
 #### Regenerate licenses file
 
 ```
-npm run generate-licenses
+yarn generate-licenses
 #cp licenses.txt losslesscut.mifi.no/public/
 ```
 Then deploy.

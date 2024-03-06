@@ -1,4 +1,4 @@
-import React, { memo, useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { memo, useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useDebounce } from 'use-debounce';
 import i18n from 'i18next';
 import { useTranslation } from 'react-i18next';
@@ -23,13 +23,13 @@ const formatVariable = (variable) => `\${${variable}}`;
 
 const extVar = formatVariable('EXT');
 
-const OutSegTemplateEditor = memo(({ outSegTemplate, setOutSegTemplate, generateOutSegFileNames, currentSegIndexSafe, getOutSegError }) => {
+const OutSegTemplateEditor = memo(({ outSegTemplate, setOutSegTemplate, generateOutSegFileNames, currentSegIndexSafe }) => {
   const { safeOutputFileName, toggleSafeOutputFileName, outputFileNameMinZeroPadding, setOutputFileNameMinZeroPadding } = useUserSettings();
 
   const [text, setText] = useState(outSegTemplate);
   const [debouncedText] = useDebounce(text, 500);
   const [validText, setValidText] = useState();
-  const [error, setError] = useState();
+  const [outSegProblems, setOutSegProblems] = useState({ error: undefined, sameAsInputFileNameWarning: false });
   const [outSegFileNames, setOutSegFileNames] = useState();
   const [shown, setShown] = useState();
   const inputRef = useRef();
@@ -42,22 +42,16 @@ const OutSegTemplateEditor = memo(({ outSegTemplate, setOutSegTemplate, generate
     if (debouncedText == null) return;
 
     try {
-      const { outSegFileNames: newOutSegFileNames, outSegError } = generateOutSegFileNames({ template: debouncedText });
-      setOutSegFileNames(newOutSegFileNames);
-      if (outSegError) {
-        setError(outSegError);
-        setValidText();
-        return;
-      }
-
-      setValidText(debouncedText);
-      setError();
+      const outSegs = generateOutSegFileNames({ template: debouncedText });
+      setOutSegFileNames(outSegs.outSegFileNames);
+      setOutSegProblems(outSegs.outSegProblems);
+      setValidText(outSegs.outSegProblems.error == null ? debouncedText : undefined);
     } catch (err) {
       console.error(err);
       setValidText();
-      setError(err.message);
+      setOutSegProblems({ error: err.message });
     }
-  }, [debouncedText, generateOutSegFileNames, getOutSegError, t]);
+  }, [debouncedText, generateOutSegFileNames, t]);
 
   // eslint-disable-next-line no-template-curly-in-string
   const isMissingExtension = validText != null && !validText.endsWith(extVar);
@@ -80,8 +74,8 @@ const OutSegTemplateEditor = memo(({ outSegTemplate, setOutSegTemplate, generate
   }, [setOutSegTemplate]);
 
   const onHideClick = useCallback(() => {
-    if (error == null) setShown(false);
-  }, [error]);
+    if (outSegProblems.error == null) setShown(false);
+  }, [outSegProblems.error]);
 
   const onShowClick = useCallback(() => {
     if (!shown) setShown(true);
@@ -89,7 +83,7 @@ const OutSegTemplateEditor = memo(({ outSegTemplate, setOutSegTemplate, generate
 
   const onTextChange = useCallback((e) => setText(e.target.value), []);
 
-  const needToShow = shown || error != null;
+  const needToShow = shown || outSegProblems.error != null || outSegProblems.sameAsInputFileNameWarning;
 
   const onVariableClick = useCallback((variable) => {
     const input = inputRef.current;
@@ -120,7 +114,7 @@ const OutSegTemplateEditor = memo(({ outSegTemplate, setOutSegTemplate, generate
               {outSegFileNames != null && <Button height={20} onClick={onAllSegmentsPreviewPress} marginLeft={5}>{t('Preview')}</Button>}
 
               <IconButton title={t('Reset')} icon={ResetIcon} height={20} onClick={reset} marginLeft={5} intent="danger" />
-              <IconButton title={t('Close')} icon={TickIcon} height={20} onClick={onHideClick} marginLeft={5} intent="success" />
+              <IconButton title={t('Close')} icon={TickIcon} height={20} onClick={onHideClick} marginLeft={5} intent="success" appearance="primary" />
             </div>
 
             <div style={{ fontSize: '.8em', color: 'var(--gray11)', display: 'flex', gap: '.3em', flexWrap: 'wrap', alignItems: 'center', marginBottom: '.7em' }}>
@@ -132,13 +126,29 @@ const OutSegTemplateEditor = memo(({ outSegTemplate, setOutSegTemplate, generate
               ))}
             </div>
 
-            {error != null && <div style={{ marginBottom: '1em' }}><ErrorIcon color="var(--red9)" size={14} verticalAlign="baseline" /> {i18n.t('There is an error in the file name template:')} {error}</div>}
+            {outSegProblems.error != null && (
+              <div style={{ marginBottom: '1em' }}>
+                <ErrorIcon color="var(--red9)" size={14} verticalAlign="baseline" /> {outSegProblems.error}
+              </div>
+            )}
 
-            {isMissingExtension && <div style={{ marginBottom: '1em' }}><WarningSignIcon color="var(--amber9)" /> {i18n.t('The file name template is missing {{ext}} and will result in a file without the suggested extension. This may result in an unplayable output file.', { ext: extVar })}</div>}
+            {outSegProblems.error == null && outSegProblems.sameAsInputFileNameWarning && (
+              <div style={{ marginBottom: '1em' }}>
+                <WarningSignIcon verticalAlign="middle" color="var(--amber9)" />{' '}
+                {i18n.t('Output file name is the same as the source file name. This increases the risk of accidentally overwriting or deleting source files!')}
+              </div>
+            )}
+
+            {isMissingExtension && (
+              <div style={{ marginBottom: '1em' }}>
+                <WarningSignIcon verticalAlign="middle" color="var(--amber9)" />{' '}
+                {i18n.t('The file name template is missing {{ext}} and will result in a file without the suggested extension. This may result in an unplayable output file.', { ext: extVar })}
+              </div>
+            )}
 
             {hasTextNumericPaddedValue && (
               <div style={{ marginBottom: '.3em' }}>
-                <Select value={outputFileNameMinZeroPadding} onChange={(e) => setOutputFileNameMinZeroPadding(parseInt(e.target.value, 10))} style={{ marginRight: '1em' }}>
+                <Select value={outputFileNameMinZeroPadding} onChange={(e) => setOutputFileNameMinZeroPadding(parseInt(e.target.value, 10))} style={{ marginRight: '1em', fontSize: '1em' }}>
                   {Array.from({ length: 10 }).map((v, i) => i + 1).map((v) => <option key={v} value={v}>{v}</option>)}
                 </Select>
                 Minimum numeric padded length
@@ -149,7 +159,7 @@ const OutSegTemplateEditor = memo(({ outSegTemplate, setOutSegTemplate, generate
               <Switch checked={safeOutputFileName} onCheckedChange={toggleSafeOutputFileName} style={{ verticalAlign: 'middle', marginRight: '.5em' }} />
               <span>{t('Sanitize file names')}</span>
 
-              {!safeOutputFileName && <WarningSignIcon color="var(--amber9)" style={{ marginLeft: '.5em' }} />}
+              {!safeOutputFileName && <WarningSignIcon color="var(--amber9)" style={{ marginLeft: '.5em', verticalAlign: 'middle' }} />}
             </div>
           </motion.div>
         )}

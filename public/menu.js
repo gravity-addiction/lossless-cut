@@ -1,9 +1,10 @@
+// eslint-disable-next-line import/no-extraneous-dependencies
 const electron = require('electron');
 const { t } = require('i18next');
 
 // menu-safe i18n.t:
 // https://github.com/mifi/lossless-cut/issues/1456
-const esc = (val) => val.replace(/&/g, '&&');
+const esc = (val) => val.replaceAll('&', '&&');
 
 const { Menu } = electron;
 
@@ -33,7 +34,7 @@ module.exports = ({ app, mainWindow, newVersion, isStoreBuild }) => {
         {
           label: esc(t('Close batch')),
           async click() {
-            mainWindow.webContents.send('closeBatchFiles');
+            mainWindow.webContents.send('closeBatch');
           },
         },
         { type: 'separator' },
@@ -101,6 +102,12 @@ module.exports = ({ app, mainWindow, newVersion, isStoreBuild }) => {
               },
             },
             {
+              label: esc(t('Subtitles (SRT)')),
+              click() {
+                mainWindow.webContents.send('importEdlFile', 'srt');
+              },
+            },
+            {
               label: esc(t('DV Analyzer Summary.txt')),
               click() {
                 mainWindow.webContents.send('importEdlFile', 'dv-analyzer-summary-txt');
@@ -136,9 +143,15 @@ module.exports = ({ app, mainWindow, newVersion, isStoreBuild }) => {
               },
             },
             {
+              label: esc(t('Subtitles (SRT)')),
+              click() {
+                mainWindow.webContents.send('exportEdlFile', 'srt');
+              },
+            },
+            {
               label: esc(t('Start times as YouTube Chapters')),
               click() {
-                mainWindow.webContents.send('exportEdlYouTube');
+                mainWindow.webContents.send('exportYouTube');
               },
             },
           ],
@@ -331,13 +344,13 @@ module.exports = ({ app, mainWindow, newVersion, isStoreBuild }) => {
         {
           label: esc(t('Merge/concatenate files')),
           click() {
-            mainWindow.webContents.send('concatCurrentBatch');
+            mainWindow.webContents.send('concatBatch');
           },
         },
         {
           label: esc(t('Set custom start offset/timecode')),
           click() {
-            mainWindow.webContents.send('askSetStartTimeOffset');
+            mainWindow.webContents.send('setStartTimeOffset');
           },
         },
         {

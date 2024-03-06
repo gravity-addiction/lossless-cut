@@ -1,4 +1,4 @@
-import React, { memo, useRef, useMemo, useCallback, useEffect, useState } from 'react';
+import { memo, useRef, useMemo, useCallback, useEffect, useState } from 'react';
 import { motion, useMotionValue, useSpring } from 'framer-motion';
 import debounce from 'lodash/debounce';
 import { useTranslation } from 'react-i18next';
@@ -42,7 +42,7 @@ const Waveforms = memo(({ calculateTimelinePercent, durationSafe, waveforms, zoo
 
 const CommandedTime = memo(({ commandedTimePercent }) => {
   const color = 'var(--gray12)';
-  const commonStyle = { left: commandedTimePercent, position: 'absolute', zIndex: 4, pointerEvents: 'none' };
+  const commonStyle = { left: commandedTimePercent, position: 'absolute', pointerEvents: 'none' };
   return (
     <>
       <FaCaretDown style={{ ...commonStyle, top: 0, color, fontSize: 14, marginLeft: -7, marginTop: -6 }} />
@@ -51,6 +51,11 @@ const CommandedTime = memo(({ commandedTimePercent }) => {
     </>
   );
 });
+
+const timelineHeight = 36;
+
+const timeWrapperStyle = { position: 'absolute', height: timelineHeight, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' };
+const timeStyle = { background: 'rgba(0,0,0,0.4)', borderRadius: 3, padding: '2px 4px', color: 'rgba(255, 255, 255, 0.8)' };
 
 const Timeline = memo(({
   durationSafe, startTimeOffset, playerTime, commandedTime, relevantTime,
@@ -61,8 +66,6 @@ const Timeline = memo(({
   playing, isFileOpened, onWheel, commandedTimeRef, goToTimecode, isSegmentSelected,
 }) => {
   const { t } = useTranslation();
-
-  const timelineHeight = 36;
 
   const { invertCutSegments } = useUserSettings();
 
@@ -242,6 +245,7 @@ const Timeline = memo(({
       style={{ position: 'relative', borderTop: '1px solid var(--gray7)', borderBottom: '1px solid var(--gray7)' }}
       onMouseDown={onMouseDown}
       onMouseMove={onMouseMove}
+      // eslint-disable-next-line jsx-a11y/mouse-events-have-key-events
       onMouseOut={onMouseOut}
     >
       {(waveformEnabled && !shouldShowWaveform) && (
@@ -251,7 +255,7 @@ const Timeline = memo(({
       )}
 
       <div
-        style={{ overflowX: 'scroll' }}
+        style={{ overflowX: 'scroll', overflowY: 'hidden' }}
         className="hide-scrollbar"
         onWheel={onWheel}
         onScroll={onTimelineScroll}
@@ -275,7 +279,7 @@ const Timeline = memo(({
               const nextThumbTime = nextThumbnail ? nextThumbnail.time : durationSafe;
               const maxWidthPercent = ((nextThumbTime - thumbnail.time) / durationSafe) * 100 * 0.9;
               return (
-                <img key={thumbnail.url} src={thumbnail.url} alt="" style={{ position: 'absolute', left: `${leftPercent}%`, height: '100%', boxSizing: 'border-box', zIndex: 1, maxWidth: `${maxWidthPercent}%`, objectFit: 'cover', border: '1px solid rgba(255, 255, 255, 0.5)', borderBottomRightRadius: 15, borderTopLeftRadius: 15, borderTopRightRadius: 15, pointerEvents: 'none' }} />
+                <img key={thumbnail.url} src={thumbnail.url} alt="" style={{ position: 'absolute', left: `${leftPercent}%`, height: '100%', boxSizing: 'border-box', maxWidth: `${maxWidthPercent}%`, objectFit: 'cover', border: '1px solid rgba(255, 255, 255, 0.5)', borderBottomRightRadius: 15, borderTopLeftRadius: 15, borderTopRightRadius: 15, pointerEvents: 'none' }} />
               );
             })}
           </div>
@@ -285,13 +289,6 @@ const Timeline = memo(({
           style={{ height: timelineHeight, width: `${zoom * 100}%`, position: 'relative', backgroundColor: timelineBackground, transition: darkModeTransition }}
           ref={timelineWrapperRef}
         >
-          {currentTimePercent !== undefined && (
-            <motion.div transition={{ type: 'spring', damping: 70, stiffness: 800 }} animate={{ left: currentTimePercent }} style={{ position: 'absolute', bottom: 0, top: 0, zIndex: 3, backgroundColor: 'var(--gray12)', width: currentTimeWidth, pointerEvents: 'none' }} />
-          )}
-          {commandedTimePercent !== undefined && (
-            <CommandedTime commandedTimePercent={commandedTimePercent} />
-          )}
-
           {apparentCutSegments.map((seg, i) => {
             if (seg.start === 0 && seg.end === 0) return null; // No video loaded
 
@@ -325,11 +322,18 @@ const Timeline = memo(({
           {shouldShowKeyframes && !areKeyframesTooClose && neighbouringKeyFrames.map((f) => (
             <div key={f.time} style={{ position: 'absolute', top: 0, bottom: 0, left: `${(f.time / durationSafe) * 100}%`, marginLeft: -1, width: 1, background: 'var(--gray11)', pointerEvents: 'none' }} />
           ))}
+
+          {currentTimePercent !== undefined && (
+            <motion.div transition={{ type: 'spring', damping: 70, stiffness: 800 }} animate={{ left: currentTimePercent }} style={{ position: 'absolute', bottom: 0, top: 0, backgroundColor: 'var(--gray12)', width: currentTimeWidth, pointerEvents: 'none' }} />
+          )}
+          {commandedTimePercent !== undefined && (
+            <CommandedTime commandedTimePercent={commandedTimePercent} />
+          )}
         </div>
       </div>
 
-      <div style={{ position: 'absolute', height: timelineHeight, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none', zIndex: 2 }}>
-        <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: 3, padding: '2px 4px', color: 'rgba(255, 255, 255, 0.8)' }}>
+      <div style={timeWrapperStyle}>
+        <div style={timeStyle}>
           {formatTimeAndFrames(displayTime)}{isZoomed ? ` ${displayTimePercent}` : ''}
         </div>
       </div>

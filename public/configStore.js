@@ -1,4 +1,5 @@
 const Store = require('electron-store');
+// eslint-disable-next-line import/no-extraneous-dependencies
 const electron = require('electron');
 const os = require('os');
 const { join, dirname } = require('path');
@@ -44,11 +45,13 @@ const defaultKeyBindings = [
   { keys: 'ctrl+home', action: 'jumpTimelineStart' },
   { keys: 'ctrl+end', action: 'jumpTimelineEnd' },
 
+  { keys: 'pageup', action: 'jumpFirstSegment' },
   { keys: 'up', action: 'jumpPrevSegment' },
   { keys: 'ctrl+up', action: 'timelineZoomIn' },
   { keys: 'command+up', action: 'timelineZoomIn' },
   { keys: 'shift+up', action: 'batchPreviousFile' },
 
+  { keys: 'pagedown', action: 'jumpLastSegment' },
   { keys: 'down', action: 'jumpNextSegment' },
   { keys: 'ctrl+down', action: 'timelineZoomOut' },
   { keys: 'command+down', action: 'timelineZoomOut' },
@@ -64,6 +67,8 @@ const defaultKeyBindings = [
 
   { keys: 'ctrl+c', action: 'copySegmentsToClipboard' },
   { keys: 'command+c', action: 'copySegmentsToClipboard' },
+
+  { keys: 'f', action: 'toggleFullscreenVideo' },
 
   { keys: 'enter', action: 'labelCurrentSegment' },
 
@@ -129,6 +134,7 @@ const defaults = {
   darkMode: true,
   preferStrongColors: false,
   outputFileNameMinZeroPadding: 1,
+  cutFromAdjustmentFrames: 0,
 };
 
 // For portable app: https://github.com/mifi/lossless-cut/issues/645
@@ -172,7 +178,7 @@ async function tryCreateStore({ customStoragePath }) {
       return;
     } catch (err) {
       // eslint-disable-next-line no-await-in-loop
-      await new Promise(r => setTimeout(r, 2000));
+      await new Promise((r) => setTimeout(r, 2000));
       logger.error('Failed to create config store, retrying', err);
     }
   }
@@ -195,11 +201,9 @@ async function init() {
   }
 
   const cleanupChoices = store.get('cleanupChoices'); // todo remove after a while
-  if (cleanupChoices != null) {
-    if (cleanupChoices.closeFile == null) {
-      logger.info('Migrating cleanupChoices.closeFile');
-      set('cleanupChoices', { ...cleanupChoices, closeFile: true });
-    }
+  if (cleanupChoices != null && cleanupChoices.closeFile == null) {
+    logger.info('Migrating cleanupChoices.closeFile');
+    set('cleanupChoices', { ...cleanupChoices, closeFile: true });
   }
 }
 

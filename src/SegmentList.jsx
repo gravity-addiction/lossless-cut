@@ -1,4 +1,4 @@
-import React, { memo, useMemo, useRef, useCallback, useState } from 'react';
+import { memo, useMemo, useRef, useCallback, useState } from 'react';
 import { FaYinYang, FaSave, FaPlus, FaMinus, FaTag, FaSortNumericDown, FaAngleRight, FaRegCheckCircle, FaRegCircle } from 'react-icons/fa';
 import { AiOutlineSplitCells } from 'react-icons/ai';
 import { motion } from 'framer-motion';
@@ -24,8 +24,7 @@ const buttonBaseStyle = {
 
 const neutralButtonColor = 'var(--gray8)';
 
-
-const Segment = memo(({ darkMode, seg, index, currentSegIndex, formatTimecode, getFrameCount, updateOrder, invertCutSegments, onClick, onRemovePress, onRemoveSelected, onLabelSelectedSegments, onReorderPress, onLabelPress, selected, onSelectSingleSegment, onToggleSegmentSelected, onDeselectAllSegments, onSelectSegmentsByLabel, onSelectSegmentsByTag, onSelectAllSegments, jumpSegStart, jumpSegEnd, addSegment, onEditSegmentTags, onExtractSegmentFramesAsImages, onInvertSelectedSegments, onDuplicateSegmentClick }) => {
+const Segment = memo(({ darkMode, seg, index, currentSegIndex, formatTimecode, getFrameCount, updateSegOrder, invertCutSegments, onClick, onRemovePress, onRemoveSelected, onLabelSelectedSegments, onReorderPress, onLabelPress, selected, onSelectSingleSegment, onToggleSegmentSelected, onDeselectAllSegments, onSelectSegmentsByLabel, onSelectSegmentsByTag, onSelectAllSegments, jumpSegStart, jumpSegEnd, addSegment, onEditSegmentTags, onExtractSegmentFramesAsImages, onInvertSelectedSegments, onDuplicateSegmentClick }) => {
   const { t } = useTranslation();
   const { getSegColor } = useSegColors();
 
@@ -33,15 +32,18 @@ const Segment = memo(({ darkMode, seg, index, currentSegIndex, formatTimecode, g
 
   const contextMenuTemplate = useMemo(() => {
     if (invertCutSegments) return [];
+
+    const updateOrder = (dir) => updateSegOrder(index, index + dir);
+
     return [
-      { label: t('Jump to start time'), click: jumpSegStart },
-      { label: t('Jump to end time'), click: jumpSegEnd },
+      { label: t('Jump to start time'), click: () => jumpSegStart(index) },
+      { label: t('Jump to end time'), click: () => jumpSegEnd(index) },
 
       { type: 'separator' },
 
       { label: t('Add segment'), click: addSegment },
-      { label: t('Label segment'), click: onLabelPress },
-      { label: t('Remove segment'), click: onRemovePress },
+      { label: t('Label segment'), click: () => onLabelPress(index) },
+      { label: t('Remove segment'), click: () => onRemovePress(index) },
       { label: t('Duplicate segment'), click: () => onDuplicateSegmentClick(seg) },
 
       { type: 'separator' },
@@ -60,7 +62,7 @@ const Segment = memo(({ darkMode, seg, index, currentSegIndex, formatTimecode, g
 
       { type: 'separator' },
 
-      { label: t('Change segment order'), click: onReorderPress },
+      { label: t('Change segment order'), click: () => onReorderPress(index) },
       { label: t('Increase segment order'), click: () => updateOrder(1) },
       { label: t('Decrease segment order'), click: () => updateOrder(-1) },
 
@@ -69,7 +71,7 @@ const Segment = memo(({ darkMode, seg, index, currentSegIndex, formatTimecode, g
       { label: t('Segment tags'), click: () => onEditSegmentTags(index) },
       { label: t('Extract frames as image files'), click: () => onExtractSegmentFramesAsImages([seg.segId]) },
     ];
-  }, [invertCutSegments, t, jumpSegStart, jumpSegEnd, addSegment, onLabelPress, onRemovePress, onLabelSelectedSegments, onRemoveSelected, onReorderPress, onDuplicateSegmentClick, seg, onSelectSingleSegment, onSelectAllSegments, onDeselectAllSegments, onSelectSegmentsByLabel, onSelectSegmentsByTag, onInvertSelectedSegments, updateOrder, onEditSegmentTags, index, onExtractSegmentFramesAsImages]);
+  }, [invertCutSegments, t, addSegment, onLabelSelectedSegments, onRemoveSelected, updateSegOrder, index, jumpSegStart, jumpSegEnd, onLabelPress, onRemovePress, onDuplicateSegmentClick, seg, onSelectSingleSegment, onSelectAllSegments, onDeselectAllSegments, onSelectSegmentsByLabel, onSelectSegmentsByTag, onInvertSelectedSegments, onReorderPress, onEditSegmentTags, onExtractSegmentFramesAsImages]);
 
   useContextMenu(ref, contextMenuTemplate);
 
@@ -95,10 +97,10 @@ const Segment = memo(({ darkMode, seg, index, currentSegIndex, formatTimecode, g
 
   const timeStr = useMemo(() => `${formatTimecode({ seconds: seg.start })} - ${formatTimecode({ seconds: seg.end })}`, [seg.start, seg.end, formatTimecode]);
 
-  function onDoubleClick() {
+  const onDoubleClick = useCallback(() => {
     if (invertCutSegments) return;
-    jumpSegStart();
-  }
+    jumpSegStart(index);
+  }, [index, invertCutSegments, jumpSegStart]);
 
   const durationMsFormatted = Math.floor(durationMs);
   const frameCount = getFrameCount(duration);
@@ -114,14 +116,18 @@ const Segment = memo(({ darkMode, seg, index, currentSegIndex, formatTimecode, g
 
   const tags = useMemo(() => getSegmentTags(seg), [seg]);
 
+  const maybeOnClick = useCallback(() => !invertCutSegments && onClick(index), [index, invertCutSegments, onClick]);
+
+  const motionStyle = useMemo(() => ({ originY: 0, margin: '5px 0', background: 'var(--gray2)', border: isActive ? '1px solid var(--gray10)' : '1px solid transparent', padding: 5, borderRadius: 5, position: 'relative' }), [isActive]);
+
   return (
     <motion.div
       ref={ref}
       role="button"
-      onClick={() => !invertCutSegments && onClick(index)}
+      onClick={maybeOnClick}
       onDoubleClick={onDoubleClick}
       layout
-      style={{ originY: 0, margin: '5px 0', background: 'var(--gray2)', border: isActive ? '1px solid var(--gray10)' : '1px solid transparent', padding: 5, borderRadius: 5, position: 'relative' }}
+      style={motionStyle}
       initial={{ scaleY: 0 }}
       animate={{ scaleY: 1, opacity: !selected && !invertCutSegments ? 0.5 : undefined }}
       exit={{ scaleY: 0 }}
@@ -162,6 +168,7 @@ const SegmentList = memo(({
   onLabelSegment, currentCutSeg, segmentAtCursor, toggleSegmentsList, splitCurrentSegment,
   selectedSegments, isSegmentSelected, onSelectSingleSegment, onToggleSegmentSelected, onDeselectAllSegments, onSelectAllSegments, onSelectSegmentsByLabel, onSelectSegmentsByTag, onExtractSegmentFramesAsImages, onLabelSelectedSegments, onInvertSelectedSegments, onDuplicateSegmentClick,
   jumpSegStart, jumpSegEnd, updateSegAtIndex,
+  editingSegmentTags, editingSegmentTagsSegmentIndex, setEditingSegmentTags, setEditingSegmentTagsSegmentIndex, onEditSegmentTags,
 }) => {
   const { t } = useTranslation();
   const { getSegColor } = useSegColors();
@@ -170,7 +177,7 @@ const SegmentList = memo(({
 
   const segments = invertCutSegments ? inverseCutSegments : apparentCutSegments;
 
-  const sortableList = segments.map((seg) => ({ id: seg.segId, seg }));
+  const sortableList = useMemo(() => segments.map((seg) => ({ id: seg.segId, seg })), [segments]);
 
   const setSortableList = useCallback((newList) => {
     if (isEqual(segments.map((s) => s.segId), newList.map((l) => l.id))) return; // No change
@@ -179,16 +186,12 @@ const SegmentList = memo(({
 
   let header = t('Segments to export:');
   if (segments.length === 0) {
-    if (invertCutSegments) {
-      header = (
-        <Trans>You have enabled the &quot;invert segments&quot; mode <FaYinYang style={{ verticalAlign: 'middle' }} /> which will cut away selected segments instead of keeping them. But there is no space between any segments, or at least two segments are overlapping. This would not produce any output. Either make room between segments or click the Yinyang <FaYinYang style={{ verticalAlign: 'middle', color: primaryTextColor }} /> symbol below to disable this mode. Alternatively you may combine overlapping segments from the menu.</Trans>
-      );
-    } else {
-      header = t('No segments to export.');
-    }
+    header = invertCutSegments ? (
+      <Trans>You have enabled the &quot;invert segments&quot; mode <FaYinYang style={{ verticalAlign: 'middle' }} /> which will cut away selected segments instead of keeping them. But there is no space between any segments, or at least two segments are overlapping. This would not produce any output. Either make room between segments or click the Yinyang <FaYinYang style={{ verticalAlign: 'middle', color: primaryTextColor }} /> symbol below to disable this mode. Alternatively you may combine overlapping segments from the menu.</Trans>
+    ) : t('No segments to export.');
   }
 
-  async function onReorderSegs(index) {
+  const onReorderSegs = useCallback(async (index) => {
     if (apparentCutSegments.length < 2) return;
     const { value } = await Swal.fire({
       title: `${t('Change order of segment')} ${index + 1}`,
@@ -206,7 +209,7 @@ const SegmentList = memo(({
       const newOrder = parseInt(value, 10);
       updateSegOrder(index, newOrder - 1);
     }
-  }
+  }, [apparentCutSegments.length, t, updateSegOrder]);
 
   function renderFooter() {
     const getButtonColor = (seg) => getSegColor(seg).desaturate(0.3).lightness(darkMode ? 45 : 55).string();
@@ -271,26 +274,20 @@ const SegmentList = memo(({
     );
   }
 
-  const [editingSegmentTagsSegmentIndex, setEditingSegmentTagsSegmentIndex] = useState();
-  const [editingSegmentTags, setEditingSegmentTags] = useState();
   const [editingTag, setEditingTag] = useState();
 
   const onTagChange = useCallback((tag, value) => setEditingSegmentTags((existingTags) => ({
     ...existingTags,
     [tag]: value,
-  })), []);
+  })), [setEditingSegmentTags]);
 
-  const onTagReset = useCallback((tag) => setEditingSegmentTags(({ [tag]: deleted, ...rest }) => rest), []);
-
-  const onEditSegmentTags = useCallback((index) => {
-    setEditingSegmentTagsSegmentIndex(index);
-    setEditingSegmentTags(getSegmentTags(apparentCutSegments[index]));
-  }, [apparentCutSegments]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const onTagReset = useCallback((tag) => setEditingSegmentTags(({ [tag]: deleted, ...rest }) => rest), [setEditingSegmentTags]);
 
   const onSegmentTagsCloseComplete = useCallback(() => {
     setEditingSegmentTagsSegmentIndex();
     setEditingSegmentTags();
-  }, []);
+  }, [setEditingSegmentTags, setEditingSegmentTagsSegmentIndex]);
 
   const onSegmentTagsConfirm = useCallback(() => {
     updateSegAtIndex(editingSegmentTagsSegmentIndex, { tags: editingSegmentTags });
@@ -346,12 +343,12 @@ const SegmentList = memo(({
                   onClick={onSegClick}
                   addSegment={addSegment}
                   onRemoveSelected={onRemoveSelected}
-                  onRemovePress={() => removeCutSegment(index)}
-                  onReorderPress={() => onReorderSegs(index)}
-                  onLabelPress={() => onLabelSegment(index)}
-                  jumpSegStart={() => jumpSegStart(index)}
-                  jumpSegEnd={() => jumpSegEnd(index)}
-                  updateOrder={(dir) => updateSegOrder(index, index + dir)}
+                  onRemovePress={removeCutSegment}
+                  onReorderPress={onReorderSegs}
+                  onLabelPress={onLabelSegment}
+                  jumpSegStart={jumpSegStart}
+                  jumpSegEnd={jumpSegEnd}
+                  updateSegOrder={updateSegOrder}
                   getFrameCount={getFrameCount}
                   formatTimecode={formatTimecode}
                   currentSegIndex={currentSegIndex}

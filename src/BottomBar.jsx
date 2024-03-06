@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { MdRotate90DegreesCcw } from 'react-icons/md';
 import { useTranslation } from 'react-i18next';
@@ -29,9 +29,41 @@ import SDOB from './SDOB';
 const { clipboard } = window.require('electron');
 
 
-const zoomOptions = Array(13).fill().map((unused, z) => 2 ** z);
+const zoomOptions = Array.from({ length: 13 }).fill().map((unused, z) => 2 ** z);
 
 const leftRightWidth = 100;
+
+const InvertCutModeButton = memo(({ invertCutSegments, setInvertCutSegments }) => {
+  const { t } = useTranslation();
+
+  const onYinYangClick = useCallback(() => {
+    setInvertCutSegments((v) => {
+      const newVal = !v;
+      if (newVal) toast.fire({ title: t('When you export, selected segments on the timeline will be REMOVED - the surrounding areas will be KEPT') });
+      else toast.fire({ title: t('When you export, selected segments on the timeline will be KEPT - the surrounding areas will be REMOVED.') });
+      return newVal;
+    });
+  }, [setInvertCutSegments, t]);
+
+  return (
+    <div style={{ marginLeft: 5 }}>
+      <motion.div
+        style={{ width: 24, height: 24 }}
+        animate={{ rotateX: invertCutSegments ? 0 : 180 }}
+        transition={{ duration: 0.3 }}
+      >
+        <FaYinYang
+          size={24}
+          role="button"
+          title={invertCutSegments ? t('Discard selected segments') : t('Keep selected segments')}
+          style={{ color: invertCutSegments ? primaryTextColor : undefined }}
+          onClick={onYinYangClick}
+        />
+      </motion.div>
+    </div>
+  );
+});
+
 
 const CutTimeInput = memo(({ darkMode, cutTime, setCutTime, startTimeOffset, seekAbs, currentCutSeg, currentApparentCutSeg, isStart }) => {
   const { t } = useTranslation();
@@ -124,7 +156,7 @@ const CutTimeInput = memo(({ darkMode, cutTime, setCutTime, startTimeOffset, see
         style={{ ...cutTimeInputStyle, color: isCutTimeManualSet() ? 'var(--red11)' : 'var(--gray12)' }}
         type="text"
         title={isStart ? t('Manually input current segment\'s start time') : t('Manually input current segment\'s end time')}
-        onChange={e => handleCutTimeInput(e.target.value)}
+        onChange={(e) => handleCutTimeInput(e.target.value)}
         onPaste={handleCutTimePaste}
         onBlur={() => setCutTimeManual()}
         onContextMenu={handleContextMenu}
@@ -144,9 +176,9 @@ const BottomBar = memo(({
   setCurrentSegIndex,
   jumpTimelineStart, jumpTimelineEnd, jumpCutEnd, jumpCutStart, startTimeOffset, setCutTime, currentApparentCutSeg,
   playing, shortStep, togglePlay, toggleLoopSelectedSegments, hasAudio,
-  keyframesEnabled, toggleKeyframesEnabled, seekClosestKeyframe, detectedFps, isFileOpened, selectedSegments,
+  keyframesEnabled, toggleShowKeyframes, seekClosestKeyframe, detectedFps, isFileOpened, selectedSegments,
   darkMode, setDarkMode,
-  toggleEnableThumbnails, toggleWaveformMode, waveformMode, showThumbnails,
+  toggleShowThumbnails, toggleWaveformMode, waveformMode, showThumbnails,
   outputPlaybackRate, setOutputPlaybackRate,
   filePath, duration, workingRef, updateSegAtIndex, playerTime, addSegment
 }) => {
@@ -181,15 +213,6 @@ const BottomBar = memo(({
   }, [selectedSegments]);
 
   const { invertCutSegments, setInvertCutSegments, simpleMode, toggleSimpleMode, exportConfirmEnabled } = useUserSettings();
-
-  const onYinYangClick = useCallback(() => {
-    setInvertCutSegments(v => {
-      const newVal = !v;
-      if (newVal) toast.fire({ title: t('When you export, selected segments on the timeline will be REMOVED - the surrounding areas will be KEPT') });
-      else toast.fire({ title: t('When you export, selected segments on the timeline will be KEPT - the surrounding areas will be REMOVED.') });
-      return newVal;
-    });
-  }, [setInvertCutSegments, t]);
 
   const rotationStr = `${rotation}°`;
 
@@ -252,7 +275,7 @@ const BottomBar = memo(({
                     style={{ padding: '0 .2em', color: showThumbnails ? primaryTextColor : undefined }}
                     role="button"
                     title={t('Show thumbnails')}
-                    onClick={toggleEnableThumbnails}
+                    onClick={toggleShowThumbnails}
                   />
 
                   <FaKey
@@ -260,7 +283,7 @@ const BottomBar = memo(({
                     style={{ padding: '0 .2em', color: keyframesEnabled ? primaryTextColor : undefined }}
                     role="button"
                     title={t('Show keyframes')}
-                    onClick={toggleKeyframesEnabled}
+                    onClick={toggleShowKeyframes}
                   />
                 </>
               )}
@@ -368,27 +391,13 @@ const BottomBar = memo(({
 
         {!simpleMode && (
           <>
-            <div style={{ marginLeft: 5 }}>
-              <motion.div
-                style={{ width: 24, height: 24 }}
-                animate={{ rotateX: invertCutSegments ? 0 : 180 }}
-                transition={{ duration: 0.3 }}
-              >
-                <FaYinYang
-                  size={24}
-                  role="button"
-                  title={invertCutSegments ? t('Discard selected segments') : t('Keep selected segments')}
-                  style={{ color: invertCutSegments ? primaryTextColor : undefined }}
-                  onClick={onYinYangClick}
-                />
-              </motion.div>
-            </div>
+            <InvertCutModeButton invertCutSegments={invertCutSegments} setInvertCutSegments={setInvertCutSegments} />
 
             <div role="button" style={{ marginRight: 5, marginLeft: 10 }} title={t('Zoom')} onClick={timelineToggleComfortZoom}>{Math.floor(zoom)}x</div>
 
-            <Select style={{ height: 20, flexBasis: 85, flexGrow: 0 }} value={zoomOptions.includes(zoom) ? zoom.toString() : ''} title={t('Zoom')} onChange={withBlur(e => setZoom(parseInt(e.target.value, 10)))}>
+            <Select style={{ height: 20, flexBasis: 85, flexGrow: 0 }} value={zoomOptions.includes(zoom) ? zoom.toString() : ''} title={t('Zoom')} onChange={withBlur((e) => setZoom(parseInt(e.target.value, 10)))}>
               <option key="" value="" disabled>{t('Zoom')}</option>
-              {zoomOptions.map(val => (
+              {zoomOptions.map((val) => (
                 <option key={val} value={String(val)}>{t('Zoom')} {val}x</option>
               ))}
             </Select>

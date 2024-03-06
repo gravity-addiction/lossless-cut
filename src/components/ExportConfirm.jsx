@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WarningSignIcon, CrossIcon } from 'evergreen-ui';
 import { FaRegCheckCircle } from 'react-icons/fa';
@@ -29,9 +29,9 @@ const boxStyle = { margin: '15px 15px 50px 15px', borderRadius: 10, padding: '10
 
 const outDirStyle = { ...highlightedTextStyle, wordBreak: 'break-all', cursor: 'pointer' };
 
-const warningStyle = { color: 'var(--red11)', fontSize: '80%' };
+const warningStyle = { color: 'var(--red11)', fontSize: '80%', marginBottom: '.5em' };
 
-const HelpIcon = ({ onClick, style }) => <IoIosHelpCircle size={20} role="button" onClick={withBlur(onClick)} style={{ cursor: 'pointer', color: primaryTextColor, verticalAlign: 'middle', marginLeft: 5, ...style }} />;
+const HelpIcon = ({ onClick, style }) => <IoIosHelpCircle size={20} role="button" onClick={withBlur(onClick)} style={{ cursor: 'pointer', color: primaryTextColor, verticalAlign: 'middle', ...style }} />;
 
 const ExportConfirm = memo(({
   areWeCutting, selectedSegments, segmentsToExport, willMerge, visible, onClosePress, onExportConfirm,
@@ -41,7 +41,7 @@ const ExportConfirm = memo(({
 }) => {
   const { t } = useTranslation();
 
-  const { changeOutDir, keyframeCut, toggleKeyframeCut, preserveMovData, movFastStart, avoidNegativeTs, setAvoidNegativeTs, autoDeleteMergedSegments, exportConfirmEnabled, toggleExportConfirmEnabled, segmentsToChapters, toggleSegmentsToChapters, preserveMetadataOnMerge, togglePreserveMetadataOnMerge, enableSmartCut, setEnableSmartCut, effectiveExportMode, enableOverwriteOutput, setEnableOverwriteOutput } = useUserSettings();
+  const { changeOutDir, keyframeCut, toggleKeyframeCut, preserveMovData, movFastStart, avoidNegativeTs, setAvoidNegativeTs, autoDeleteMergedSegments, exportConfirmEnabled, toggleExportConfirmEnabled, segmentsToChapters, toggleSegmentsToChapters, preserveMetadataOnMerge, togglePreserveMetadataOnMerge, enableSmartCut, setEnableSmartCut, effectiveExportMode, enableOverwriteOutput, setEnableOverwriteOutput, ffmpegExperimental, setFfmpegExperimental, cutFromAdjustmentFrames, setCutFromAdjustmentFrames } = useUserSettings();
 
   const isMov = ffmpegIsMov(outFormat);
   const isIpod = outFormat === 'ipod';
@@ -109,6 +109,14 @@ const ExportConfirm = memo(({
     toast.fire({ icon: 'info', timer: 10000, text: `${avoidNegativeTs}: ${texts[avoidNegativeTs]}` });
   }, [avoidNegativeTs]);
 
+  const onCutFromAdjustmentFramesHelpPress = useCallback(() => {
+    toast.fire({ icon: 'info', timer: 10000, text: i18n.t('This option allows you to shift all segment start times forward by one or more frames before cutting. This can be useful if the output video starts from the wrong (preceding) keyframe.') });
+  }, []);
+
+  const onFfmpegExperimentalHelpPress = useCallback(() => {
+    toast.fire({ icon: 'info', timer: 10000, text: t('Enable experimental ffmpeg features flag?') });
+  }, [t]);
+
   const canEditTemplate = !willMerge || !autoDeleteMergedSegments;
 
   // https://stackoverflow.com/questions/33454533/cant-scroll-to-top-of-flex-item-that-is-overflowing-container
@@ -148,10 +156,14 @@ const ExportConfirm = memo(({
                         <ExportModeButton selectedSegments={selectedSegments} />
                       </td>
                       <td>
-                        {effectiveExportMode === 'sesgments_to_chapters' && <WarningSignIcon verticalAlign="middle" color="warning" marginLeft=".3em" title={i18n.t('Segments to chapters mode is active, this means that the file will not be cut. Instead chapters will be created from the segments.')} />}
-                        <HelpIcon onClick={onExportModeHelpPress} />
+                        {effectiveExportMode === 'sesgments_to_chapters' ? (
+                          <WarningSignIcon verticalAlign="middle" color="warning" title={i18n.t('Segments to chapters mode is active, this means that the file will not be cut. Instead chapters will be created from the segments.')} />
+                        ) : (
+                          <HelpIcon onClick={onExportModeHelpPress} />
+                        )}
                       </td>
                     </tr>
+
                     <tr>
                       <td>
                         {t('Output container format:')}
@@ -163,6 +175,7 @@ const ExportConfirm = memo(({
                         <HelpIcon onClick={onOutFmtHelpPress} />
                       </td>
                     </tr>
+
                     <tr>
                       <td>
                         <Trans>Input has {{ numStreamsTotal }} tracks</Trans>
@@ -174,10 +187,14 @@ const ExportConfirm = memo(({
                         <HighlightedText style={{ cursor: 'pointer' }} onClick={onShowStreamsSelectorClick}><Trans>Keeping {{ numStreamsToCopy }} tracks</Trans></HighlightedText>
                       </td>
                       <td>
-                        {areWeCuttingProblematicStreams && <WarningSignIcon verticalAlign="middle" color="warning" marginLeft=".3em" />}
-                        <HelpIcon onClick={onTracksHelpPress} />
+                        {areWeCuttingProblematicStreams ? (
+                          <WarningSignIcon verticalAlign="middle" color="warning" />
+                        ) : (
+                          <HelpIcon onClick={onTracksHelpPress} />
+                        )}
                       </td>
                     </tr>
+
                     <tr>
                       <td>
                         {t('Save output to path:')}
@@ -226,6 +243,7 @@ const ExportConfirm = memo(({
                     </tr>
                   </tbody>
                 </table>
+
                 <h3 style={{ marginBottom: '.5em' }}>{t('Advanced options')}</h3>
 
                 <table className={styles.options}>
@@ -243,6 +261,7 @@ const ExportConfirm = memo(({
                             <HelpIcon onClick={onSegmentsToChaptersHelpPress} />
                           </td>
                         </tr>
+
                         <tr>
                           <td>
                             {t('Preserve original metadata when merging? (slow)')}
@@ -274,10 +293,14 @@ const ExportConfirm = memo(({
                             <Switch checked={enableSmartCut} onCheckedChange={() => setEnableSmartCut((v) => !v)} />
                           </td>
                           <td>
-                            {needSmartCut && <WarningSignIcon verticalAlign="middle" color="warning" marginLeft=".3em" title={i18n.t('Experimental functionality has been activated!')} />}
-                            <HelpIcon onClick={onSmartCutHelpPress} />
+                            {needSmartCut ? (
+                              <WarningSignIcon verticalAlign="middle" color="warning" title={i18n.t('Experimental functionality has been activated!')} />
+                            ) : (
+                              <HelpIcon onClick={onSmartCutHelpPress} />
+                            )}
                           </td>
                         </tr>
+
                         {!needSmartCut && (
                           <tr>
                             <td>
@@ -288,12 +311,31 @@ const ExportConfirm = memo(({
                               <Switch checked={keyframeCut} onCheckedChange={() => toggleKeyframeCut()} />
                             </td>
                             <td>
-                              {!keyframeCut && <WarningSignIcon verticalAlign="middle" color="warning" marginLeft=".3em" />}
-                              <HelpIcon onClick={onKeyframeCutHelpPress} />
+                              {!keyframeCut ? (
+                                <WarningSignIcon verticalAlign="middle" color="warning" />
+                              ) : (
+                                <HelpIcon onClick={onKeyframeCutHelpPress} />
+                              )}
                             </td>
                           </tr>
                         )}
                       </>
+                    )}
+
+                    {areWeCutting && (
+                      <tr>
+                        <td>
+                          {t('Shift all start times')}
+                        </td>
+                        <td>
+                          <Select value={cutFromAdjustmentFrames} onChange={(e) => setCutFromAdjustmentFrames(Number(e.target.value))} style={{ height: 20, marginLeft: 5 }}>
+                            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((v) => <option key={v} value={v}>{t('+{{numFrames}} frames', { numFrames: v, count: v })}</option>)}
+                          </Select>
+                        </td>
+                        <td>
+                          <HelpIcon onClick={onCutFromAdjustmentFramesHelpPress} />
+                        </td>
+                      </tr>
                     )}
 
                     {isMov && (
@@ -304,11 +346,17 @@ const ExportConfirm = memo(({
                           </td>
                           <td>
                             <MovFastStartButton />
+                            {isIpod && !movFastStart && <div style={warningStyle}>{t('For the ipod format, it is recommended to activate this option')}</div>}
                           </td>
                           <td>
-                            <HelpIcon onClick={onMovFastStartHelpPress} /> {isIpod && !movFastStart && <span style={warningStyle}>{t('For the ipod format, it is recommended to activate this option')}</span>}
+                            {isIpod && !movFastStart ? (
+                              <WarningSignIcon verticalAlign="middle" color="warning" />
+                            ) : (
+                              <HelpIcon onClick={onMovFastStartHelpPress} />
+                            )}
                           </td>
                         </tr>
+
                         <tr>
                           <td>
                             {t('Preserve all MP4/MOV metadata?')}
@@ -318,46 +366,79 @@ const ExportConfirm = memo(({
                             <PreserveMovDataButton />
                           </td>
                           <td>
-                            {isIpod && preserveMovData && <WarningSignIcon verticalAlign="middle" color="warning" marginLeft=".3em" />}
-                            <HelpIcon onClick={onPreserveMovDataHelpPress} />
+                            {isIpod && preserveMovData ? (
+                              <WarningSignIcon verticalAlign="middle" color="warning" />
+                            ) : (
+                              <HelpIcon onClick={onPreserveMovDataHelpPress} />
+                            )}
                           </td>
                         </tr>
                       </>
                     )}
 
-                    {!needSmartCut && (
-                      <tr>
-                        <td>
-                          &quot;avoid_negative_ts&quot;
-                          {!['make_zero', 'auto'].includes(avoidNegativeTs) && <div style={warningStyle}>{t('It\'s generally recommended to set this to one of: {{values}}', { values: '"auto", "make_zero"' })}</div>}
-                        </td>
-                        <td>
-                          <Select value={avoidNegativeTs} onChange={(e) => setAvoidNegativeTs(e.target.value)} style={{ height: 20, marginLeft: 5 }}>
-                            <option value="auto">auto</option>
-                            <option value="make_zero">make_zero</option>
-                            <option value="make_non_negative">make_non_negative</option>
-                            <option value="disabled">disabled</option>
-                          </Select>
-                        </td>
-                        <td>
-                          {!['make_zero', 'auto'].includes(avoidNegativeTs) && <WarningSignIcon verticalAlign="middle" color="warning" marginLeft=".3em" />}
-                          <HelpIcon onClick={onAvoidNegativeTsHelpPress} />
-                        </td>
-                      </tr>
-                    )}
+                    {!needSmartCut && (() => {
+                      const avoidNegativeTsWarn = (() => {
+                        if (willMerge) {
+                          if (avoidNegativeTs !== 'make_non_negative') {
+                            return t('When merging, it\'s generally recommended to set this to "make_non_negative"');
+                          }
+                          return undefined;
+                        }
+                        if (!['make_zero', 'auto'].includes(avoidNegativeTs)) {
+                          return t('It\'s generally recommended to set this to one of: {{values}}', { values: '"auto", "make_zero"' });
+                        }
+                        return undefined;
+                      })();
+
+                      return (
+                        <tr>
+                          <td>
+                            {`"${'avoid_negative_ts'}"`}
+                            {avoidNegativeTsWarn != null && <div style={warningStyle}>{avoidNegativeTsWarn}</div>}
+                          </td>
+                          <td>
+                            <Select value={avoidNegativeTs} onChange={(e) => setAvoidNegativeTs(e.target.value)} style={{ height: 20, marginLeft: 5 }}>
+                              <option value="auto">auto</option>
+                              <option value="make_zero">make_zero</option>
+                              <option value="make_non_negative">make_non_negative</option>
+                              <option value="disabled">disabled</option>
+                            </Select>
+                          </td>
+                          <td>
+                            {avoidNegativeTsWarn != null ? (
+                              <WarningSignIcon verticalAlign="middle" color="warning" />
+                            ) : (
+                              <HelpIcon onClick={onAvoidNegativeTsHelpPress} />
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })()}
+
+                    <tr>
+                      <td>
+                        {t('"ffmpeg" experimental flag')}
+                      </td>
+                      <td>
+                        <Switch checked={ffmpegExperimental} onCheckedChange={setFfmpegExperimental} />
+                      </td>
+                      <td>
+                        <HelpIcon onClick={onFfmpegExperimentalHelpPress} />
+                      </td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
             </div>
           </motion.div>
 
-          <div style={{ zIndex: 11, position: 'fixed', right: 0, bottom: 0, display: 'flex', alignItems: 'center', margin: 5 }}>
+          <div style={{ position: 'fixed', right: 0, bottom: 0, display: 'flex', alignItems: 'center', margin: 5 }}>
             <motion.div
               initial={{ opacity: 0, translateX: 50 }}
               animate={{ opacity: 1, translateX: 0 }}
               exit={{ opacity: 0, translateX: 50 }}
               transition={{ duration: 0.4, easings: ['easeOut'] }}
-              style={{ display: 'flex', alignItems: 'flex-end' }}
+              style={{ display: 'flex', alignItems: 'flex-end', background: 'rgba(0,0,0,0.5)' }}
             >
               <ToggleExportConfirm size={25} />
               <div style={{ fontSize: 13, marginLeft: 3, marginRight: 7, maxWidth: 120, lineHeight: '100%', color: exportConfirmEnabled ? 'var(--gray12)' : 'var(--gray11)', cursor: 'pointer' }} role="button" onClick={toggleExportConfirmEnabled}>{t('Show this page before exporting?')}</div>

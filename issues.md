@@ -1,7 +1,7 @@
 # FAQ
 
 - **Can LosslessCut crop, resize, stretch, mirror, overlay text/images, watermark, blur, redact, re-encode, create GIF, slideshow, burn subtitles, color grading, fade/transition between video clips, fade/combine/mix/merge audio tracks or change audio volume?**
-  - No, these are all lossy operations (meaning you *have* to re-encode the file), but in the future I may start to implement such features. [See this issue for more information.](https://github.com/mifi/lossless-cut/issues/372)
+  - No, these are all lossy operations (meaning you *have* to re-encode the file), but in the future I may start to implement such features. [See this issue for more information.](https://github.com/mifi/lossless-cut/issues/372). See also [#643](https://github.com/mifi/lossless-cut/issues/643).
 - Can LosslessCut be batched/automated using a CLI or API?
   - While it was never designed for advanced batching/automation, it does have a [basic CLI and a HTTP API](./cli.md), and there are a few feature requests regarding this: [#980](https://github.com/mifi/lossless-cut/issues/980) [#868](https://github.com/mifi/lossless-cut/issues/868).
 - Is there a keyboard shortcut to do X?
@@ -49,10 +49,11 @@ Each segment's *start cut time* normally (but not always) will be "rounded" to t
 - Try to change `avoid_negative_ts` (in export options).
 - Try also to set the **start**-cutpoint a few frames **before or after** the nearest keyframe (may also solve audio sync issues).
 - You may try to enable the new "Smart cut" mode to allow cutting between keyframes. However it is very experimental and may not work for many files.
+- Currently, the only way to review the exported file (to check the actual cutpoints) is to run the export (possibly with only one segment enabled to speed up) and then manually check the output file. See also [#1887](https://github.com/mifi/lossless-cut/issues/1887)
 
 ### Starts from wrong keyframe
 
-For some files, when you place segment start cutpoints at keyframes, and you export, it will instead cut from the keyframe **before** the keyframe that you wanted. This is because with some videos, ffmpeg struggles to find the nearest previous keyframe, see [#1216](https://github.com/mifi/lossless-cut/issues/1216). To workaround this, you can try to shift your segments' **start**-cutpoints forward by a few frames, so that ffmpeg correctly cuts from the *previous* keyframe. You can do this for all segments before exporting as follows:
+For some files, when you place segment start cutpoints at keyframes, and you export, it will instead cut from the keyframe **before** the keyframe that you wanted. This is because with some videos, ffmpeg struggles to find the nearest previous keyframe, see [#1216](https://github.com/mifi/lossless-cut/issues/1216). To workaround this, you can try to shift your segments' **start**-cutpoints forward by a few frames, so that ffmpeg correctly cuts from the *previous* keyframe. You can also enable the Export Option "Shift all start times" by +1, +2, +3 frames or so.
 
 - Menu: "Edit" -> "Segments" -> "Shift all segments on timeline"
 - Enter `00:00:00.200` (or a larger value if it doesn't help)
@@ -78,7 +79,7 @@ Doing this first might "clean up" certain parameters in the files, to make them 
 
 ## Smart cut not working
 
-Smart cut is experimental, so don't expect too much. But if you're having problems, check out [this issue](https://github.com/mifi/lossless-cut/issues/126).
+Smart cut is experimental, so don't expect too much. But if you're having problems, check out [this issue](https://github.com/mifi/lossless-cut/issues/126). If Smart Cut gives you repeated (duplicate) segments, you can try to enable the Export Option "Shift all start times".
 
 ## My file changes from MP4 to MOV
 
@@ -104,13 +105,13 @@ If the output file name has special characters that get replaced by underscore (
 
 # Known limitations
 
-## Low quality / blurry playback and no audio
+## Low quality / blurry playback
 
-Some formats or codecs are not natively supported, so they will preview with low quality playback and no audio. You may convert these files to a supported codec from the File menu, see [#88](https://github.com/mifi/lossless-cut/issues/88).
+Some formats or codecs are not natively supported, so they will play back with a lower quality. You may convert these files to a supported codec from the File menu, see [#88](https://github.com/mifi/lossless-cut/issues/88).
 
 ## MPEG TS / MTS
 
-MPEG TS (`.mts`/`.ts`) files have a tendency to be a bit problematic. It may help to **first** remux them to another format like MP4/MKV. Then you can open the MP4/MKV file an work on that. Also disable non-needed tracks. In LosslessCut you can remux files by simply opening them, select a different output format, and export without editing the timeline (segments).
+MPEG TS (`.mts`/`.ts`) files have a tendency to be a [bit problematic](https://github.com/mifi/lossless-cut/issues/1839). It may help to **first** remux them to another format like MP4/MKV. Then you can open the MP4/MKV file an work on that. Also disable non-needed tracks. In LosslessCut you can remux files by simply opening them, select a different output format, and export without editing the timeline (segments).
 
 ## EXIF / metadata
 
@@ -128,7 +129,11 @@ When exporting, LosslessCut may be unable to process certain proprietary tracks.
 
 ## Multiple LosslessCut instances
 
-By default, only a single running instance of LosslessCut is allowed. If you start a new LosslessCut instance from the command line, it will instead pass the list of files onto the already running instance. You can override this behavior inside settings Note that this is **(experimental)**, because Electron doesn't seem to support this. [More info](https://github.com/electron/electron/issues/2493) [#1641](https://github.com/mifi/lossless-cut/issues/1641) 
+By default, only a single running instance of LosslessCut is allowed. If you start a new LosslessCut instance from the command line, it will instead pass the list of files onto the already running instance. You can override this behavior inside settings Note that this is **(experimental)**, because Electron doesn't seem to support this. [More info](https://github.com/electron/electron/issues/2493) [#1641](https://github.com/mifi/lossless-cut/issues/1641)
+
+## Rotation and merging
+
+A video’s rotation is just metadata stored in its file. A file can only have a single rotation across the whole file, so if you have two video files and you rotate only one file and then concatenate them, there will be only one output rotation.
 
 # Still cannot find an answer?
 

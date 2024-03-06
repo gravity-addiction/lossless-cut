@@ -1,4 +1,4 @@
-import React, { memo, Fragment, useEffect, useMemo, useCallback, useState } from 'react';
+import { memo, Fragment, useEffect, useMemo, useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { SearchInput, PlusIcon, InlineAlert, UndoIcon, Paragraph, TakeActionIcon, IconButton, Button, DeleteIcon, AddIcon, Heading, Text, Dialog } from 'evergreen-ui';
 import { FaMouse, FaPlus, FaStepForward, FaStepBackward } from 'react-icons/fa';
@@ -7,8 +7,11 @@ import groupBy from 'lodash/groupBy';
 import orderBy from 'lodash/orderBy';
 import uniq from 'lodash/uniq';
 
+import useUserSettings from '../hooks/useUserSettings';
+import Swal from '../swal';
 import SetCutpointButton from './SetCutpointButton';
 import SegmentCutpointButton from './SegmentCutpointButton';
+import { getModifier } from '../hooks/useTimelineScroll';
 
 
 const renderKeys = (keys) => keys.map((key, i) => (
@@ -21,7 +24,7 @@ const renderKeys = (keys) => keys.map((key, i) => (
 // From https://craig.is/killing/mice
 // For modifier keys you can use shift, ctrl, alt, or meta.
 // You can substitute option for alt and command for meta.
-const allModifiers = ['shift', 'ctrl', 'alt', 'meta'];
+const allModifiers = new Set(['shift', 'ctrl', 'alt', 'meta']);
 function fixKeys(keys) {
   const replaced = keys.map((key) => {
     if (key === 'option') return 'alt';
@@ -29,10 +32,10 @@ function fixKeys(keys) {
     return key;
   });
   const uniqed = uniq(replaced);
-  const nonModifierKeys = keys.filter((key) => !allModifiers.includes(key));
+  const nonModifierKeys = keys.filter((key) => !allModifiers.has(key));
   if (nonModifierKeys.length === 0) return []; // only modifiers is invalid
   if (nonModifierKeys.length > 1) return []; // can only have one non-modifier
-  return orderBy(uniqed, [key => key !== 'shift', key => key !== 'ctrl', key => key !== 'alt', key => key !== 'meta', key => key]);
+  return orderBy(uniqed, [(key) => key !== 'shift', (key) => key !== 'ctrl', (key) => key !== 'alt', (key) => key !== 'meta', (key) => key]);
 }
 
 const CreateBinding = memo(({
@@ -104,12 +107,14 @@ const CreateBinding = memo(({
   );
 });
 
-const rowStyle = { display: 'flex', alignItems: 'center', margin: '6px 0' };
+const rowStyle = { display: 'flex', alignItems: 'center', margin: '.2em 0', borderBottom: '1px solid rgba(0,0,0,0.1)', paddingBottom: '.5em' };
 
 const KeyboardShortcuts = memo(({
-  keyBindings, setKeyBindings, resetKeyBindings, currentCutSeg,
+  keyBindings, setKeyBindings, resetKeyBindings, currentCutSeg, mainActions,
 }) => {
   const { t } = useTranslation();
+
+  const { mouseWheelZoomModifierKey } = useUserSettings();
 
   const { actionsMap, extraLinesPerCategory } = useMemo(() => {
     const playbackCategory = t('Playback');
@@ -135,8 +140,9 @@ const KeyboardShortcuts = memo(({
           <div key="2" style={{ ...rowStyle, alignItems: 'center' }}>
             <Text>{t('Pan timeline')}</Text>
             <div style={{ flexGrow: 1 }} />
+            {getModifier(mouseWheelZoomModifierKey).map((v) => <kbd key={v} style={{ marginRight: '.7em' }}>{v}</kbd>)}
             <FaMouse style={{ marginRight: 3 }} />
-            <Text>{t('Mouse scroll/wheel left/right')}</Text>
+            <Text>{t('Mouse scroll/wheel up/down')}</Text>
           </div>,
         ],
       },
@@ -191,6 +197,10 @@ const KeyboardShortcuts = memo(({
         },
         reloadFile: {
           name: t('Reload current media'),
+          category: playbackCategory,
+        },
+        html5ify: {
+          name: t('Convert to supported format'),
           category: playbackCategory,
         },
 
@@ -291,6 +301,10 @@ const KeyboardShortcuts = memo(({
           name: t('Label current segment'),
           category: segmentsAndCutpointsCategory,
         },
+        editCurrentSegmentTags: {
+          name: t('Edit current segment tags'),
+          category: segmentsAndCutpointsCategory,
+        },
         splitCurrentSegment: {
           name: t('Split segment at cursor'),
           category: segmentsAndCutpointsCategory,
@@ -305,6 +319,14 @@ const KeyboardShortcuts = memo(({
         },
         jumpNextSegment: {
           name: t('Jump to next segment'),
+          category: segmentsAndCutpointsCategory,
+        },
+        jumpFirstSegment: {
+          name: t('Jump to first segment'),
+          category: segmentsAndCutpointsCategory,
+        },
+        jumpLastSegment: {
+          name: t('Jump to last segment'),
           category: segmentsAndCutpointsCategory,
         },
         reorderSegsByStartTime: {
@@ -327,6 +349,10 @@ const KeyboardShortcuts = memo(({
           name: t('Align segment times to keyframes'),
           category: segmentsAndCutpointsCategory,
         },
+        createSegmentsFromKeyframes: {
+          name: t('Create segments from keyframes'),
+          category: segmentsAndCutpointsCategory,
+        },
         createFixedDurationSegments: {
           name: t('Create fixed duration segments'),
           category: segmentsAndCutpointsCategory,
@@ -337,6 +363,18 @@ const KeyboardShortcuts = memo(({
         },
         createRandomSegments: {
           name: t('Create random segments'),
+          category: segmentsAndCutpointsCategory,
+        },
+        detectBlackScenes: {
+          name: t('Detect black scenes'),
+          category: segmentsAndCutpointsCategory,
+        },
+        detectSilentScenes: {
+          name: t('Detect silent scenes'),
+          category: segmentsAndCutpointsCategory,
+        },
+        detectSceneChanges: {
+          name: t('Detect scene changes'),
           category: segmentsAndCutpointsCategory,
         },
         shuffleSegments: {
@@ -390,6 +428,14 @@ const KeyboardShortcuts = memo(({
         },
         extractAllStreams: {
           name: t('Extract all tracks'),
+          category: streamsCategory,
+        },
+        showStreamsSelector: {
+          name: t('Edit tracks / metadata tags'),
+          category: streamsCategory,
+        },
+        showIncludeExternalStreamsDialog: {
+          name: t('Include more tracks from other file'),
           category: streamsCategory,
         },
 
@@ -480,6 +526,10 @@ const KeyboardShortcuts = memo(({
           name: t('Keep or discard audio tracks'),
           category: otherCategory,
         },
+        toggleStripThumbnail: {
+          name: t('Keep or discard thumbnail tracks'),
+          category: otherCategory,
+        },
         increaseRotation: {
           name: t('Change rotation'),
           category: otherCategory,
@@ -500,6 +550,38 @@ const KeyboardShortcuts = memo(({
           name: t('Copy selected segments times to clipboard'),
           category: otherCategory,
         },
+        toggleWaveformMode: {
+          name: t('Show waveform'),
+          category: otherCategory,
+        },
+        toggleShowThumbnails: {
+          name: t('Show thumbnails'),
+          category: otherCategory,
+        },
+        toggleShowKeyframes: {
+          name: t('Show keyframes'),
+          category: otherCategory,
+        },
+        toggleFullscreenVideo: {
+          name: 'Toggle full screen video',
+          category: otherCategory,
+        },
+        toggleSettings: {
+          name: t('Settings'),
+          category: otherCategory,
+        },
+        openSendReportDialog: {
+          name: t('Report an error'),
+          category: otherCategory,
+        },
+        openFilesDialog: {
+          name: t('Open'),
+          category: otherCategory,
+        },
+        exportYouTube: {
+          name: t('Start times as YouTube Chapters'),
+          category: otherCategory,
+        },
         closeActiveScreen: {
           name: t('Close current screen'),
           category: otherCategory,
@@ -514,7 +596,7 @@ const KeyboardShortcuts = memo(({
         },
       },
     };
-  }, [currentCutSeg, t]);
+  }, [currentCutSeg, mouseWheelZoomModifierKey, t]);
 
   useEffect(() => {
     // cleanup invalid bindings, to prevent renamed actions from blocking user to rebind
@@ -562,8 +644,9 @@ const KeyboardShortcuts = memo(({
     console.log('new key binding', action, keysStr);
 
     setKeyBindings((existingBindings) => {
-      const haveDuplicate = existingBindings.some((existingBinding) => existingBinding.keys === keysStr);
-      if (haveDuplicate) {
+      const duplicate = existingBindings.find((existingBinding) => existingBinding.keys === keysStr);
+      if (duplicate) {
+        Swal.fire({ icon: 'error', title: t('Duplicate keyboard combination'), text: t('Combination is already bound to "{{alreadyBoundKey}}"', { alreadyBoundKey: actionsMap[duplicate.action]?.name }) });
         console.log('trying to add duplicate');
         return existingBindings;
       }
@@ -572,11 +655,14 @@ const KeyboardShortcuts = memo(({
       setCreatingBinding();
       return [...existingBindings, { action, keys: keysStr }];
     });
-  }, [setKeyBindings]);
+  }, [actionsMap, setKeyBindings, t]);
+
+  const missingActions = Object.keys(mainActions).filter((key) => actionsMap[key] == null);
+  if (missingActions.length > 0) throw new Error(`Action(s) missing: ${missingActions.join(',')}`);
 
   return (
     <>
-      <div style={{ color: 'black' }}>
+      <div style={{ color: 'black', marginBottom: '1em' }}>
         <div>
           <SearchInput value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search" width="100%" />
         </div>
@@ -618,7 +704,7 @@ const KeyboardShortcuts = memo(({
               );
             })}
 
-            {extraLinesPerCategory[category]}
+            {extraLinesPerCategory[category] && <div style={{ marginTop: '.8em' }}>{extraLinesPerCategory[category]}</div>}
           </div>
         ))}
       </div>
@@ -631,7 +717,7 @@ const KeyboardShortcuts = memo(({
 });
 
 const KeyboardShortcutsDialog = memo(({
-  isShown, onHide, keyBindings, setKeyBindings, resetKeyBindings, currentCutSeg,
+  isShown, onHide, keyBindings, setKeyBindings, resetKeyBindings, currentCutSeg, mainActions,
 }) => {
   const { t } = useTranslation();
 
@@ -645,7 +731,7 @@ const KeyboardShortcutsDialog = memo(({
       onConfirm={onHide}
       topOffset="3vh"
     >
-      {isShown ? <KeyboardShortcuts keyBindings={keyBindings} setKeyBindings={setKeyBindings} currentCutSeg={currentCutSeg} resetKeyBindings={resetKeyBindings} /> : <div />}
+      {isShown ? <KeyboardShortcuts keyBindings={keyBindings} setKeyBindings={setKeyBindings} currentCutSeg={currentCutSeg} resetKeyBindings={resetKeyBindings} mainActions={mainActions} /> : <div />}
     </Dialog>
   );
 });

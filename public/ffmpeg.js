@@ -18,8 +18,7 @@ function setCustomFfPath(path) {
 }
 
 function getFfCommandLine(cmd, args) {
-  const mapArg = arg => (/[^0-9a-zA-Z-_]/.test(arg) ? `'${arg}'` : arg);
-  return `${cmd} ${args.map(mapArg).join(' ')}`;
+  return `${cmd} ${args.map((arg) => (/[^\w-]/.test(arg) ? `'${arg}'` : arg)).join(' ')}`;
 }
 
 function getFfPath(cmd) {
@@ -47,7 +46,7 @@ function abortFfmpegs() {
   });
 }
 
-function handleProgress(process, durationIn, onProgress, customMatcher = () => {}) {
+function handleProgress(process, durationIn, onProgress, customMatcher = () => undefined) {
   if (!onProgress) return;
   onProgress(0);
 
@@ -56,8 +55,10 @@ function handleProgress(process, durationIn, onProgress, customMatcher = () => {
     // console.log('progress', line);
 
     try {
+      // eslint-disable-next-line unicorn/better-regex
       let match = line.match(/frame=\s*[^\s]+\s+fps=\s*[^\s]+\s+q=\s*[^\s]+\s+(?:size|Lsize)=\s*[^\s]+\s+time=\s*([^\s]+)\s+/);
       // Audio only looks like this: "line size=  233422kB time=01:45:50.68 bitrate= 301.1kbits/s speed= 353x    "
+      // eslint-disable-next-line unicorn/better-regex
       if (!match) match = line.match(/(?:size|Lsize)=\s*[^\s]+\s+time=\s*([^\s]+)\s+/);
       if (!match) {
         customMatcher(line);
@@ -108,7 +109,7 @@ function runFfmpegProcess(args, customExecaOptions, { logCli = true } = {}) {
     runningFfmpegs.add(process);
     try {
       await process;
-    } catch (err) {
+    } catch {
       // ignored here
     } finally {
       runningFfmpegs.delete(process);
@@ -148,7 +149,7 @@ async function runFfprobe(args, { timeout = isDev ? 10000 : 30000 } = {}) {
   }
 }
 
-async function renderWaveformPng({ filePath, start, duration, color }) {
+async function renderWaveformPng({ filePath, start, duration, color, streamIndex }) {
   const args1 = [
     '-hide_banner',
     '-i', filePath,
@@ -156,7 +157,7 @@ async function renderWaveformPng({ filePath, start, duration, color }) {
     '-t', duration,
     '-c', 'copy',
     '-vn',
-    '-map', 'a:0',
+    '-map', `0:${streamIndex}`,
     '-f', 'matroska', // mpegts doesn't support vorbis etc
     '-',
   ];
@@ -246,10 +247,11 @@ async function detectSceneChanges({ filePath, minChange, onProgress, from, to })
   handleProgress(process, to - from, onProgress);
   const rl = readline.createInterface({ input: process.stdout });
   rl.on('line', (line) => {
+    // eslint-disable-next-line unicorn/better-regex
     const match = line.match(/^frame:\d+\s+pts:\d+\s+pts_time:([\d.]+)/);
     if (!match) return;
     const time = parseFloat(match[1]);
-    if (Number.isNaN(time) || time <= times[times.length - 1]) return;
+    if (Number.isNaN(time) || time <= times.at(-1)) return;
     times.push(time);
   });
 
@@ -288,6 +290,7 @@ const mapFilterOptions = (options) => Object.entries(options).map(([key, value])
 
 async function blackDetect({ filePath, filterOptions, onProgress, from, to }) {
   function matchLineTokens(line) {
+    // eslint-disable-next-line unicorn/better-regex
     const match = line.match(/^[blackdetect\s*@\s*0x[0-9a-f]+] black_start:([\d\\.]+) black_end:([\d\\.]+) black_duration:[\d\\.]+/);
     if (!match) return {};
     return {
@@ -301,6 +304,7 @@ async function blackDetect({ filePath, filterOptions, onProgress, from, to }) {
 
 async function silenceDetect({ filePath, filterOptions, onProgress, from, to }) {
   function matchLineTokens(line) {
+    // eslint-disable-next-line unicorn/better-regex
     const match = line.match(/^[silencedetect\s*@\s*0x[0-9a-f]+] silence_end: ([\d\\.]+)[|\s]+silence_duration: ([\d\\.]+)/);
     if (!match) return {};
     const end = parseFloat(match[1]);
@@ -386,8 +390,8 @@ async function html5ify({ outPath, filePath: filePathArg, speed, hasAudio, hasVi
   let audio;
   if (hasAudio) {
     if (speed === 'slowest') audio = 'hq';
-    else if (['slow-audio', 'fast-audio', 'fastest-audio'].includes(speed)) audio = 'lq';
-    else if (['fast-audio-remux', 'fastest-audio-remux'].includes(speed)) audio = 'copy';
+    else if (['slow-audio', 'fast-audio'].includes(speed)) audio = 'lq';
+    else if (['fast-audio-remux'].includes(speed)) audio = 'copy';
   }
 
   let video;
@@ -397,7 +401,7 @@ async function html5ify({ outPath, filePath: filePathArg, speed, hasAudio, hasVi
     else video = 'copy';
   }
 
-  console.log('Making HTML5 friendly version', { filePathArg, outPath, video, audio });
+  console.log('Making HTML5 friendly version', { filePathArg, outPath, speed, video, audio });
 
   let videoArgs;
   let audioArgs;
@@ -409,6 +413,7 @@ async function html5ify({ outPath, filePath: filePathArg, speed, hasAudio, hasVi
 
   switch (video) {
     case 'hq': {
+      // eslint-disable-next-line unicorn/prefer-ternary
       if (isMac) {
         videoArgs = ['-vf', 'format=yuv420p', '-allow_sw', '1', '-vcodec', 'h264', '-b:v', '15M'];
       } else {
@@ -423,6 +428,7 @@ async function html5ify({ outPath, filePath: filePathArg, speed, hasAudio, hasVi
       break;
     }
     case 'lq': {
+      // eslint-disable-next-line unicorn/prefer-ternary
       if (isMac) {
         videoArgs = ['-vf', `scale=-2:${targetHeight},format=yuv420p`, '-allow_sw', '1', '-sws_flags', 'lanczos', '-vcodec', 'h264', '-b:v', '1500k'];
       } else {
@@ -443,6 +449,7 @@ async function html5ify({ outPath, filePath: filePathArg, speed, hasAudio, hasVi
 
   switch (audio) {
     case 'hq': {
+      // eslint-disable-next-line unicorn/prefer-ternary
       if (isMac) {
         audioArgs = ['-acodec', 'aac_at', '-b:a', '192k'];
       } else {
@@ -451,6 +458,7 @@ async function html5ify({ outPath, filePath: filePathArg, speed, hasAudio, hasVi
       break;
     }
     case 'lq': {
+      // eslint-disable-next-line unicorn/prefer-ternary
       if (isMac) {
         audioArgs = ['-acodec', 'aac_at', '-ar', '44100', '-ac', '2', '-b:a', '96k'];
       } else {
@@ -485,25 +493,9 @@ async function html5ify({ outPath, filePath: filePathArg, speed, hasAudio, hasVi
   console.log(stdout);
 }
 
-function createRawFfmpeg({ fps = 25, path, inWidth, inHeight, seekTo, oneFrameOnly, execaOpts, streamIndex, outSize = 320 }) {
-  // const fps = 25; // TODO
-
-  const aspectRatio = inWidth / inHeight;
-
-  let newWidth;
-  let newHeight;
-  if (inWidth > inHeight) {
-    newWidth = outSize;
-    newHeight = Math.floor(newWidth / aspectRatio);
-  } else {
-    newHeight = outSize;
-    newWidth = Math.floor(newHeight * aspectRatio);
-  }
-
+function readOneJpegFrame({ path, seekTo, videoStreamIndex }) {
   const args = [
-    '-hide_banner', '-loglevel', 'panic',
-
-    '-re',
+    '-hide_banner', '-loglevel', 'error',
 
     '-ss', seekTo,
 
@@ -511,12 +503,10 @@ function createRawFfmpeg({ fps = 25, path, inWidth, inHeight, seekTo, oneFrameOn
 
     '-i', path,
 
-    '-vf', `fps=${fps},scale=${newWidth}:${newHeight}:flags=lanczos`,
-    '-map', `0:${streamIndex}`,
-    '-vcodec', 'rawvideo',
-    '-pix_fmt', 'rgba',
+    '-map', `0:${videoStreamIndex}`,
+    '-vcodec', 'mjpeg',
 
-    ...(oneFrameOnly ? ['-frames:v', '1'] : []),
+    '-frames:v', '1',
 
     '-f', 'image2pipe',
     '-',
@@ -524,28 +514,70 @@ function createRawFfmpeg({ fps = 25, path, inWidth, inHeight, seekTo, oneFrameOn
 
   // console.log(args);
 
-  return {
-    process: runFfmpegProcess(args, execaOpts, { logCli: false }),
-    width: newWidth,
-    height: newHeight,
-    channels: 4,
-  };
+  return runFfmpegProcess(args, { encoding: 'buffer' }, { logCli: true });
 }
 
-function getOneRawFrame({ path, inWidth, inHeight, seekTo, streamIndex, outSize }) {
-  const { process, width, height, channels } = createRawFfmpeg({ path, inWidth, inHeight, seekTo, streamIndex, oneFrameOnly: true, execaOpts: { encoding: null }, outSize });
-  return { process, width, height, channels };
-}
+const enableLog = false;
+const encode = true;
 
-function encodeLiveRawStream({ path, inWidth, inHeight, seekTo, streamIndex }) {
-  const { process, width, height, channels } = createRawFfmpeg({ path, inWidth, inHeight, seekTo, streamIndex, execaOpts: { encoding: null, buffer: false } });
+function createMediaSourceProcess({ path, videoStreamIndex, audioStreamIndex, seekTo, size, fps }) {
+  function getVideoFilters() {
+    if (videoStreamIndex == null) return [];
 
-  return {
-    process,
-    width,
-    height,
-    channels,
-  };
+    const filters = [];
+    if (fps != null) filters.push(`fps=${fps}`);
+    if (size != null) filters.push(`scale=${size}:${size}:flags=lanczos:force_original_aspect_ratio=decrease`);
+    if (filters.length === 0) return [];
+    return ['-vf', filters.join(',')];
+  }
+
+  // https://stackoverflow.com/questions/16658873/how-to-minimize-the-delay-in-a-live-streaming-with-ffmpeg
+  // https://unix.stackexchange.com/questions/25372/turn-off-buffering-in-pipe
+  const args = [
+    '-hide_banner',
+    ...(enableLog ? [] : ['-loglevel', 'error']),
+
+    // https://stackoverflow.com/questions/30868854/flush-latency-issue-with-fragmented-mp4-creation-in-ffmpeg
+    '-fflags', '+nobuffer+flush_packets+discardcorrupt',
+    '-avioflags', 'direct',
+    // '-flags', 'low_delay', // this seems to ironically give a *higher* delay
+    '-flush_packets', '1',
+
+    '-vsync', 'passthrough',
+
+    '-ss', seekTo,
+
+    '-noautorotate',
+
+    '-i', path,
+
+    ...(videoStreamIndex != null ? ['-map', `0:${videoStreamIndex}`] : ['-vn']),
+
+    ...(audioStreamIndex != null ? ['-map', `0:${audioStreamIndex}`] : ['-an']),
+
+    ...(encode ? [
+      ...(videoStreamIndex != null ? [
+        ...getVideoFilters(),
+
+        '-pix_fmt', 'yuv420p', '-c:v', 'libx264', '-preset', 'ultrafast', '-tune', 'zerolatency', '-crf', '10',
+        '-g', '1', // reduces latency and buffering
+      ] : []),
+
+      ...(audioStreamIndex != null ? [
+        '-ac', '2', '-c:a', 'aac', '-b:a', '128k',
+      ] : []),
+
+      // May alternatively use webm/vp8 https://stackoverflow.com/questions/24152810/encoding-ffmpeg-to-mpeg-dash-or-webm-with-keyframe-clusters-for-mediasource
+    ] : [
+      '-c', 'copy',
+    ]),
+
+    '-f', 'mp4', '-movflags', '+frag_keyframe+empty_moov+default_base_moof', '-',
+  ];
+
+  if (enableLog) console.log(getFfCommandLine('ffmpeg', args));
+
+  return execa(getFfmpegPath(), args, { encoding: null, buffer: false, stderr: enableLog ? 'inherit' : 'pipe' });
 }
 
 // Don't pass complex objects over the bridge
@@ -567,8 +599,8 @@ module.exports = {
   getFfCommandLine,
   html5ify,
   getDuration,
-  getOneRawFrame,
-  encodeLiveRawStream,
+  readOneJpegFrame,
   blackDetect,
   silenceDetect,
+  createMediaSourceProcess,
 };
