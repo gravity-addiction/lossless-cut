@@ -2179,26 +2179,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@zxing/library@npm:^0.20.0":
-  version: 0.20.0
-  resolution: "@zxing/library@npm:0.20.0"
-  dependencies:
-    "@zxing/text-encoding": ~0.9.0
-    ts-custom-error: ^3.2.1
-  dependenciesMeta:
-    "@zxing/text-encoding":
-      optional: true
-  checksum: ba2d0e4d6213e74426fdaf096cd8af14f1c28c6d5d872e42d363ee67507d2b1d1c3a777395522df116670e5fdf59d799b48533465c7311ee09bb8ba3fbbd0e69
-  languageName: node
-  linkType: hard
-
-"@zxing/text-encoding@npm:~0.9.0":
-  version: 0.9.0
-  resolution: "@zxing/text-encoding@npm:0.9.0"
-  checksum: c23b12aee7639382e4949961304a1294776afaffa40f579e09ffecd0e5e68cf26ef3edd75009de46da8a536e571448755ca68b3e2ea707d53793c0edb2e2c34a
-  languageName: node
-  linkType: hard
-
 "abbrev@npm:^1.0.0":
   version: 1.1.1
   resolution: "abbrev@npm:1.1.1"
@@ -2450,13 +2430,6 @@ __metadata:
   version: 2.0.0
   resolution: "aproba@npm:2.0.0"
   checksum: c2b9a631298e8d6f3797547e866db642f68493808f5b37cd61da778d5f6ada890d16f668285f7d60bd4fc3b03889bd590ffe62cf81b700e9bb353431238a0a7b
-  languageName: node
-  linkType: hard
-
-"arch@npm:^2.1.1":
-  version: 2.2.0
-  resolution: "arch@npm:2.2.0"
-  checksum: e21b7635029fe8e9cdd5a026f9a6c659103e63fff423834323cdf836a1bb240a72d0c39ca8c470f84643385cf581bd8eda2cad8bf493e27e54bd9783abe9101f
   languageName: node
   linkType: hard
 
@@ -8435,16 +8408,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-adodb@portal:/C:/Users/Gary Taylor/Development/lossless-cut/node-adodb::locator=lossless-cut%40workspace%3A.":
-  version: 0.0.0-use.local
-  resolution: "node-adodb@portal:/C:/Users/Gary Taylor/Development/lossless-cut/node-adodb::locator=lossless-cut%40workspace%3A."
-  dependencies:
-    arch: ^2.1.1
-    debug: ^4.1.1
-  conditions: os=win32
-  languageName: node
-  linkType: soft
-
 "node-fetch@npm:^1.0.1":
   version: 1.7.3
   resolution: "node-fetch@npm:1.7.3"
@@ -11468,13 +11431,6 @@ __metadata:
   peerDependencies:
     typescript: ">=4.2.0"
   checksum: 6d7f60fd01e3885bb334607f22b9cb1002e72da81dad2e672fef1b0d1a2f640b0f0ff5310369401488fac90c7a7f5d39c89fd18789af59c672c9b5aef4cade3e
-  languageName: node
-  linkType: hard
-
-"ts-custom-error@npm:^3.2.1":
-  version: 3.3.1
-  resolution: "ts-custom-error@npm:3.3.1"
-  checksum: 50a1e825fced68d70049bd8d282379a635e43aa023a370fa8e736b12a6edba7f18a2d731fa194ac35303a8b625be56e121bdb31d8a0318250d1a8b277059fce3
   languageName: node
   linkType: hard
 

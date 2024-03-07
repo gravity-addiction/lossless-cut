@@ -24,7 +24,7 @@ import { formatDuration, parseDuration, isExactDurationMatch } from './util/dura
 import useUserSettings from './hooks/useUserSettings';
 import { askForPlaybackRate } from './dialogs';
 
-import SDOB from './SDOB';
+// import OSHD from './OSHD';
 
 const { clipboard } = window.require('electron');
 
@@ -459,10 +459,10 @@ const BottomBar = memo(({
         <ExportButton size={1.3} segmentsToExport={segmentsToExport} areWeCutting={areWeCutting} onClick={onExportPress} />
       </div>
       
-      <SDOB filePath={filePath} duration={duration} workingRef={workingRef} playerTime={playerTime} updateSegAtIndex={updateSegAtIndex} setCurrentSegIndex={setCurrentSegIndex} addSegment={addSegment} cutSegments={cutSegments}></SDOB>
         <div style={{ flexGrow: 1 }} />
     </>
   );
 });
 
+//  <OSHD filePath={filePath} duration={duration} workingRef={workingRef} playerTime={playerTime} updateSegAtIndex={updateSegAtIndex} setCurrentSegIndex={setCurrentSegIndex} addSegment={addSegment} cutSegments={cutSegments}></OSHD>
 export default BottomBar;

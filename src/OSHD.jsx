@@ -6,7 +6,7 @@ import { isDurationValid } from './segments';
 import OSHDShim from './OSHDShim';
 import { withBlur, mirrorTransform, checkAppPath } from './util';
 
-const SDOB = memo(({
+const OSHD = memo(({
   filePath, duration, playerTime, workingRef, 
   updateSegAtIndex, cutSegments, setCurrentSegIndex, addSegment 
 }) => {
