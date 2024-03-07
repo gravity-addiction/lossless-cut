@@ -1,3 +1,6 @@
 [submodule "html5-qrcode"]
 	path = html5-qrcode
 	url = https://github.com/gravity-addiction/html5-qrcode.git
+[submodule "node-adodb"]
+	path = node-adodb
+	url = https://github.com/gravity-addiction/node-adodb.git

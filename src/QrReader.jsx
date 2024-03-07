@@ -12,7 +12,7 @@ const QrReader = memo(({ rotate, filePath, playerTime, commandedTime, playing, g
   function onScanFailure(error) {
     // handle scan failure, usually better to ignore and keep scanning.
     // for example:
-    console.warn(`Code scan error = ${error}`);
+    console.log(`Code scan error`, error);
   }
   
   let html5QrcodeScanner;
@@ -36,22 +36,30 @@ const QrReader = memo(({ rotate, filePath, playerTime, commandedTime, playing, g
     cancel();
   }, [cancel]);
 
-  useEffect(() => {
-    // console.log('debouncedState', debouncedState);
+  useMemo(() => {
+
+    console.log('debouncedState', debouncedState);
     if (!html5QrcodeScanner) {
-      html5QrcodeScanner = new Html5QrcodeScanner("reader",
-        { fps: 30 },
-        false
-      )
+      console.log('Create Scanner');
+      setTimeout(() => {
+        html5QrcodeScanner = new Html5QrcodeScanner("reader",
+          { fps: 10,
+            qrbox: 250,
+            formatsToSupport: [0]
+          },
+          true
+        );
+        console.log('Rendering!')
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+      }, 5000);
     }
     if (debouncedState.startTime == null) return;
   
-    if (debouncedState.playing) {
-      console.log('Rendering!')
-      html5QrcodeScanner.render(onScanSuccess, onScanFailure);
-    } else {
+    // if (debouncedState.playing) {
+
+    // } else {
     
-    }
+    // }
   }, [debouncedState]);
   
 

@@ -410,8 +410,7 @@ const BottomBar = memo(({
           </>
         )}
 
-        <SDOB filePath={filePath} duration={duration} workingRef={workingRef} playerTime={playerTime} updateSegAtIndex={updateSegAtIndex} setCurrentSegIndex={setCurrentSegIndex} addSegment={addSegment} cutSegments={cutSegments}></SDOB>
-        <div style={{ flexGrow: 1 }} />
+        <div style={{ flexGrow: 3 }}>&nbsp;</div>
 
         {hasVideo && (
           <>
@@ -459,6 +458,9 @@ const BottomBar = memo(({
 
         <ExportButton size={1.3} segmentsToExport={segmentsToExport} areWeCutting={areWeCutting} onClick={onExportPress} />
       </div>
+      
+      <SDOB filePath={filePath} duration={duration} workingRef={workingRef} playerTime={playerTime} updateSegAtIndex={updateSegAtIndex} setCurrentSegIndex={setCurrentSegIndex} addSegment={addSegment} cutSegments={cutSegments}></SDOB>
+        <div style={{ flexGrow: 1 }} />
     </>
   );
 });

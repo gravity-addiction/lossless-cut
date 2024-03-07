@@ -8435,16 +8435,15 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-adodb@npm:^5.0.3":
-  version: 5.0.3
-  resolution: "node-adodb@npm:5.0.3"
+"node-adodb@portal:/C:/Users/Gary Taylor/Development/lossless-cut/node-adodb::locator=lossless-cut%40workspace%3A.":
+  version: 0.0.0-use.local
+  resolution: "node-adodb@portal:/C:/Users/Gary Taylor/Development/lossless-cut/node-adodb::locator=lossless-cut%40workspace%3A."
   dependencies:
     arch: ^2.1.1
     debug: ^4.1.1
-  checksum: fa3947303b6eda094d9f69c91aec5ce585df3c34c82216adaa8a5a1ed855a8ad35f4807fb44a6bf5c00746cf1a45b78eb80201d3bb98a34cc53c1f17e25ac399
   conditions: os=win32
   languageName: node
-  linkType: hard
+  linkType: soft
 
 "node-fetch@npm:^1.0.1":
   version: 1.7.3
@@ -12329,6 +12328,13 @@ __metadata:
   dependencies:
     string-width: "npm:^1.0.2 || 2 || 3 || 4"
   checksum: d5f8027b9a8255a493a94e4ec1b74a27bff6679d5ffe29316a3215e4712945c84ef73ca4045c7e20ae7d0c72f5f57f296e04a4928e773d4276a2f1222e4c2e99
+  languageName: node
+  linkType: hard
+
+"winreg@npm:^1.2.5":
+  version: 1.2.5
+  resolution: "winreg@npm:1.2.5"
+  checksum: 4bc0f8328ec814bdc7a6029354aebfdf090469d9f31fcaa85c3536b07289c3346d5606552351848bd9bd0af71a58c4a3cfa63760d842c9da1a8a99b9d2d443ab
   languageName: node
   linkType: hard
 

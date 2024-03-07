@@ -129,9 +129,11 @@
     "lodash": "^4.17.19",
     "mime-types": "^2.1.14",
     "morgan": "^1.10.0",
-    "node-adodb": "^5.0.3",
+    "node-adodb": "file:./node-adodb",
     "semver": "^7.5.2",
     "string-to-stream": "^1.1.1",
+    "strtok3": "^6.0.0",
+    "winreg": "^1.2.5",
     "winston": "^3.8.1",
     "yargs-parser": "^21.0.0"
   },
@@ -177,8 +179,12 @@
           "to": "."
         },
         {
-          "from": "./node_modules/node-adodb/lib/adodb.js",
+          "from": "./node-adodb/lib/adodb.js",
           "to": "adodb.js"
+        },
+        {
+          "from": "./node_modules/winreg/lib/registry.js",
+          "to": "registry.js"
         }
       ],
       "icon": "icon-build/app.icns",
@@ -301,8 +307,12 @@
           "to": "."
         },
         {
-          "from": "./node_modules/node-adodb/lib/adodb.js",
+          "from": "./node-adodb/lib/adodb.js",
           "to": "adodb.js"
+        },
+        {
+          "from": "./node_modules/winreg/lib/registry.js",
+          "to": "registry.js"
         }
       ],
       "icon": "icon-build/app.ico",
@@ -417,8 +427,12 @@
           "to": "."
         },
         {
-          "from": "./node_modules/node-adodb/lib/adodb.js",
+          "from": "./node-adodb/lib/adodb.js",
           "to": "adodb.js"
+        },
+        {
+          "from": "./node_modules/winreg/lib/registry.js",
+          "to": "registry.js"
         }
       ],
       "category": "AudioVideo",
@@ -455,6 +469,7 @@
   },
   "packageManager": "yarn@4.0.2",
   "resolutions": {
-    "app-builder-lib@24.8.0": "patch:app-builder-lib@npm%3A24.8.0#./.yarn/patches/app-builder-lib-npm-24.8.0-51e1f5cd3f.patch"
+    "app-builder-lib@24.8.0": "patch:app-builder-lib@npm%3A24.8.0#./.yarn/patches/app-builder-lib-npm-24.8.0-51e1f5cd3f.patch",
+    "node-adodb": "portal:/C:/Users/Gary Taylor/Development/lossless-cut/node-adodb"
   }
 }
