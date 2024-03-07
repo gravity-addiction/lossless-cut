@@ -146,6 +146,14 @@ export default () => {
   const [cutFromAdjustmentFrames, setCutFromAdjustmentFrames] = useState(safeGetConfigInitial('cutFromAdjustmentFrames'));
   useEffect(() => safeSetConfig({ cutFromAdjustmentFrames }), [cutFromAdjustmentFrames]);
 
+  // Skydive or Bust Settings
+  const [sdobSelectedEvent, setSdobSelectedEvent] = useState(safeGetConfig('sdobSelectedEvent'));
+  useEffect(() => safeSetConfig({ sdobSelectedEvent }), [sdobSelectedEvent]);
+  const [sdobUploadServer, setSdobUploadServer] = useState(safeGetConfig('sdobUploadServer'));
+  useEffect(() => safeSetConfig({ sdobUploadServer }), [sdobUploadServer]);
+  const [sdobAPIServer, setSdobAPIServer] = useState(safeGetConfig('sdobAPIServer'));
+  useEffect(() => safeSetConfig({ sdobAPIServer }), [sdobAPIServer]);
+
   const resetKeyBindings = useCallback(() => {
     configStore.reset('keyBindings');
     setKeyBindings(safeGetConfig('keyBindings'));
@@ -265,5 +273,11 @@ export default () => {
     setOutputFileNameMinZeroPadding,
     cutFromAdjustmentFrames,
     setCutFromAdjustmentFrames,
+    sdobSelectedEvent,
+    setSdobSelectedEvent,
+    sdobUploadServer,
+    setSdobUploadServer,
+    sdobAPIServer,
+    setSdobAPIServer,
   };
 };

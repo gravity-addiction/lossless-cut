@@ -163,6 +163,19 @@ function App() {
   const [editingSegmentTags, setEditingSegmentTags] = useState<Record<string, unknown>>();
   const [mediaSourceQuality, setMediaSourceQuality] = useState(0);
 
+  // Skydive or Bust state
+  const [sdob, setSdob] = useState(true);
+  const [sdobRefreshAPI, setSdobRefreshAPI] = useState(1);
+  const [sdobTeamConfirmVisible, setSdobTeamConfirmVisible] = useState(false);
+  const [sdobEventList, setSdobEventList] = useState([]);
+  const [sdobCompList, setSdobCompList] = useState([]);
+  const [sdobTeamList, setSdobTeamList] = useState([]);
+  const [sdobRoundList, setSdobRoundList] = useState([]);
+
+  const [sdobSelectedComp, setSdobSelectedComp] = useState();
+  const [sdobSelectedTeam, setSdobSelectedTeam] = useState();
+  const [sdobSelectedRound, setSdobSelectedRound] = useState();
+
   const incrementMediaSourceQuality = useCallback(() => setMediaSourceQuality((v) => (v + 1) % mediaSourceQualities.length), []);
 
   // Batch state / concat files
@@ -193,6 +206,7 @@ function App() {
 
   const {
     captureFormat, setCaptureFormat, customOutDir, setCustomOutDir, keyframeCut, setKeyframeCut, preserveMovData, setPreserveMovData, movFastStart, setMovFastStart, avoidNegativeTs, autoMerge, timecodeFormat, invertCutSegments, setInvertCutSegments, autoExportExtraStreams, askBeforeClose, enableAskForImportChapters, enableAskForFileOpenAction, playbackVolume, setPlaybackVolume, autoSaveProjectFile, wheelSensitivity, invertTimelineScroll, language, ffmpegExperimental, hideNotifications, autoLoadTimecode, autoDeleteMergedSegments, exportConfirmEnabled, setExportConfirmEnabled, segmentsToChapters, setSegmentsToChapters, preserveMetadataOnMerge, setPreserveMetadataOnMerge, simpleMode, setSimpleMode, outSegTemplate, setOutSegTemplate, keyboardSeekAccFactor, keyboardNormalSeekSpeed, treatInputFileModifiedTimeAsStart, treatOutputFileModifiedTimeAsStart, outFormatLocked, setOutFormatLocked, safeOutputFileName, setSafeOutputFileName, enableAutoHtml5ify, segmentsToChaptersOnly, keyBindings, setKeyBindings, resetKeyBindings, enableSmartCut, customFfPath, storeProjectInWorkingDir, setStoreProjectInWorkingDir, enableOverwriteOutput, mouseWheelZoomModifierKey, captureFrameMethod, captureFrameQuality, captureFrameFileNameFormat, enableNativeHevc, cleanupChoices, setCleanupChoices, darkMode, setDarkMode, preferStrongColors, outputFileNameMinZeroPadding, cutFromAdjustmentFrames,
+    sdobSelectedEvent, setSdobSelectedEvent, sdobUploadServer, setSdobUploadServer, sdobAPIServer, setSdobAPIServer
   } = allUserSettings;
 
   useEffect(() => {
@@ -792,6 +806,9 @@ function App() {
     resetMergedOutFileName();
     setOutputPlaybackRateState(1);
 
+    // Skydive or Bust Reset
+    setSdobTeamConfirmVisible(false);
+
     cancelRenderThumbnails();
   }, [cutSegmentsHistory, clearSegments, setFileFormat, setDetectedFileFormat, setDeselectedSegmentIds, resetMergedOutFileName, cancelRenderThumbnails]);
 
@@ -1274,6 +1291,8 @@ function App() {
         });
       }
 
+      console.log('Submitting', mergedOutFilePath);
+
       const notices = [];
       const warnings = [];
 
@@ -1304,9 +1323,70 @@ function App() {
       const revealPath = willMerge ? mergedOutFilePath : outFiles[0];
       if (!hideAllNotifications) openExportFinishedToast({ filePath: revealPath, warnings, notices });
 
+      console.log('RevealPath', revealPath);
+
+      // if (revealPath) {
+      //   const options = {
+      //     method: "POST",
+      //     url: sdobUploadServer, // "https://transq.thegarybox.com/upload",
+      //     headers: {
+      //         // "Authorization": "Basic " + auth,
+      //         "Content-Type": "multipart/form-data",
+      //         "X-Event": sdobGetEventBySlug(sdobSelectedEvent).slug || 'unknown',
+      //         "X-CompID": sdobGetCompById(sdobSelectedComp).id || 0,
+      //         "X-TeamID": sdobGetTeamById(sdobSelectedTeam).id || 0,
+      //         "X-Team": sdobGetTeamById(sdobSelectedTeam).teamNumber || 0,
+      //         "X-Round": sdobGetRoundByI(sdobSelectedRound).roundNum || 0
+      //     },
+      //     formData : {
+      //       "file1": fs.createReadStream(submitFile.outPath),
+      //       "file1.event": sdobGetEventBySlug(sdobSelectedEvent).slug || 'unknown',
+      //       "file1.comp_id": sdobGetCompById(sdobSelectedComp).id || 0,
+      //       "file1.team_id": sdobGetTeamById(sdobSelectedTeam).id || 0,
+      //       "file1.team": sdobGetTeamById(sdobSelectedTeam).teamNumber || 0,
+      //       "file1.round": sdobGetRoundByI(sdobSelectedRound).roundNum || 0
+      //     }
+      //   };
+      //   console.log(options);
+
+      //   if (sdobUploadServer) {
+      //     setWorking('Uploading To Server');
+      //     if ((sdobUploadServer || '').substr(0, 5).toLocaleUpperCase('en-US') === 'HTTPS') {
+      //       console.log('Uploading' );
+      //       const agentOptions = {
+      //         host: 'transq.thegarybox.com',
+      //         port: '443',
+      //         path: '/upload',
+      //         rejectUnauthorized: false
+      //       };
+
+      //       options.agent = new https.Agent(agentOptions);
+      //       options.port = 443;
+      //     }
+
+      //     // axios.post(sdobUploadServer, {
+      //     //   "file1": fs.createReadStream(submitFile.outPath),
+      //     //   "file1.event": sdobGetEventBySlug(sdobSelectedEvent).slug || 'unknown',
+      //     //   "file1.comp_id": sdobGetCompById(sdobSelectedComp).id || 0,
+      //     //   "file1.team_id": sdobGetTeamById(sdobSelectedTeam).id || 0,
+      //     //   "file1.round": sdobGetRoundByI(sdobSelectedRound).roundNum || 0
+      //     // });
+      //     request(options, function (err, res, body) {
+      //       if (err) {
+      //         return console.error('upload failed:', err);
+      //       }
+      //       console.log('Upload successful!  Server responded with:', body);
+      //     });
+      //   }
+      // }
+
       if (cleanupChoices.cleanupAfterExport) await cleanupFilesWithDialog();
 
       resetMergedOutFileName();
+
+      setSdobSelectedTeam(undefined);
+      setSdobSelectedRound(undefined);
+      setSdobTeamConfirmVisible(true);
     } catch (err) {
       if (err instanceof Error) {
         if ('killed' in err && err.killed === true) {
@@ -1332,7 +1412,7 @@ function App() {
       setWorking(undefined);
       setCutProgress(undefined);
     }
-  }, [numStreamsToCopy, segmentsToExport, haveInvalidSegs, setWorking, segmentsToChaptersOnly, outSegTemplateOrDefault, generateOutSegFileNames, cutMultiple, outputDir, customOutDir, fileFormat, duration, isRotationSet, effectiveRotation, copyFileStreams, allFilesMeta, keyframeCut, shortestFlag, ffmpegExperimental, preserveMovData, preserveMetadataOnMerge, movFastStart, avoidNegativeTs, customTagsByFile, paramsByStreamId, detectedFps, willMerge, enableOverwriteOutput, exportConfirmEnabled, mainFileFormatData, mainStreams, exportExtraStreams, areWeCutting, mergedOutFilePath, hideAllNotifications, cleanupChoices.cleanupAfterExport, cleanupFilesWithDialog, resetMergedOutFileName, selectedSegmentsOrInverse, segmentsToChapters, invertCutSegments, autoConcatCutSegments, autoDeleteMergedSegments, nonCopiedExtraStreams, filePath, handleExportFailed]);
+  }, [numStreamsToCopy, segmentsToExport, haveInvalidSegs, setWorking, segmentsToChaptersOnly, outSegTemplateOrDefault, generateOutSegFileNames, cutMultiple, outputDir, customOutDir, fileFormat, duration, isRotationSet, effectiveRotation, copyFileStreams, allFilesMeta, keyframeCut, shortestFlag, ffmpegExperimental, preserveMovData, preserveMetadataOnMerge, movFastStart, avoidNegativeTs, customTagsByFile, paramsByStreamId, detectedFps, willMerge, enableOverwriteOutput, exportConfirmEnabled, mainFileFormatData, mainStreams, exportExtraStreams, areWeCutting, mergedOutFilePath, hideAllNotifications, cleanupChoices.cleanupAfterExport, cleanupFilesWithDialog, resetMergedOutFileName, selectedSegmentsOrInverse, segmentsToChapters, invertCutSegments, autoConcatCutSegments, autoDeleteMergedSegments, nonCopiedExtraStreams, filePath, handleExportFailed, sdobUploadServer, sdobAPIServer]);
 
   const onExportPress = useCallback(async () => {
     if (!filePath) return;
@@ -1344,6 +1424,132 @@ function App() {
       setStreamsSelectorShown(false);
     }
   }, [filePath, exportConfirmEnabled, exportConfirmVisible, onExportConfirm]);
+
+  // Skydive or Bust Functions
+  const onSdobSetSlate = useCallback(async () => {
+    if (working || !filePath || !isDurationValid(duration)) {
+      return;
+    }
+
+    if (!sdobSelectedComp) {
+      errorToast('Must Select a Competition');
+      return;
+    }
+
+    const myComp = sdobGetCompById(sdobSelectedComp);
+    // const slateSegment = (myComp.segments || []).find((seg) => seg.name == 'slate');
+    // console.log('Got Slate Seg', slateSegment);
+    // if (!slateSegment) {
+    //   errorToast('No Slate needed for this video');
+    //   return;
+    // }
+
+    // try {
+    //   setCurrentSegIndex(0);
+    //   const currentTime = getCurrentTime();
+    //   updateSegAtIndex(0, {
+    //     start: Math.min(Math.max(currentTime - slateSegment.pre, 0), duration),
+    //     end: Math.min(Math.max(currentTime + slateSegment.post, 0), duration)
+    //   });
+    // } catch (err) {
+    //   errorToast(err.message);
+    // }
+  }, [working, filePath, duration, updateSegAtIndex]);
+
+  const onSdobSetExit = useCallback(async () => {
+    console.log('Set Exit', sdobSelectedComp);
+    if (working || !filePath || !isDurationValid(duration)) {
+      return;
+    }
+
+    if (!sdobSelectedComp) {
+      errorToast('Must Select a Competition');
+      return;
+    }
+
+    const myComp = sdobGetCompById(sdobSelectedComp);
+    // const exitSegment = (myComp.segments || []).find((seg) => seg.name == 'exit');
+    // if (!exitSegment) {
+    //   errorToast('No Exit needed for this video');
+    //   return;
+    // }
+
+    // try {
+    //   setCurrentSegIndex(1);
+    //   const currentTime = getCurrentTime();
+    //   updateSegAtIndex(1, {
+    //     start: Math.min(Math.max(currentTime - exitSegment.pre, 0), duration),
+    //     end: Math.min(Math.max(currentTime + exitSegment.post, 0), duration)
+    //   });
+    // } catch (err) {
+    //   errorToast(err.message);
+    // }
+  }, [working, filePath, duration, updateSegAtIndex]);
+
+  const sdobCloseTeamConfirm = useCallback(() => {
+    setSdobTeamConfirmVisible(false);
+    updateSegmentTags();
+  }, []);
+
+  const onSdobTeamConfirm = useCallback(async () => {
+    errorToast('Selected Team');
+    
+  }, []);
+
+  const sdobGetEventList = () => {
+    if (!sdobAPIServer) { return; }
+
+    const baseUrl = new URL(sdobAPIServer );
+    const apiUrl = new URL(`${baseUrl.pathname}/events`, sdobAPIServer).href
+    fetch(apiUrl)
+      .then(res => res.json())
+      .then((eventListResp) => {
+        console.log('Event List Return', eventListResp);
+        setSdobEventList(eventListResp || []);
+        if (!sdobSelectedEvent) {
+          setSdobSelectedEvent((eventListResp || []).length ? eventListResp[0].slug || '' : '');
+        }
+      });
+  }
+
+  const sdobGetEventBySlug = (event_slug) => {
+    return (sdobEventList || []).find((event: any) => String(event.slug) === String(event_slug));
+  };
+  const sdobGetCompById = (comp_id) => {
+    return (sdobCompList || []).find((comp: any) => String(comp.id) === String(comp_id));
+  };
+  const sdobGetTeamById = (team_id) => {
+    return (sdobTeamList || []).find((team: any) => String(team.id) === String(team_id));
+  };
+  const sdobGetRoundByI = (round_i) => {
+    return (sdobRoundList || []).find((rnd: any) => String(rnd.i) === String(round_i));
+  };
+
+  useEffect(() => {
+    console.log('Fetching Event List: Event -', sdobSelectedEvent);
+    sdobGetEventList()
+  }, []);
+
+
+  const updateSegmentTags = useCallback(() => {
+    const eventInfo = sdobGetEventBySlug(sdobSelectedEvent);
+    const compInfo = sdobGetCompById(sdobSelectedComp) || {}
+    const teamInfo = sdobGetTeamById(sdobSelectedTeam) || {};
+    const roundInfo = sdobGetRoundByI(sdobSelectedRound) || {};
+
+    // setCutSegments(cutSegments.map(seg => {
+    //   seg.tags = seg.tags || {};
+    //   seg.tags.TEAM_NUMBER = teamInfo.teamNumber;
+    //   seg.tags.ROUND_NUMBER = roundInfo.roundNum;
+    //   return seg;
+    // }));
+  }, [cutSegments, sdobSelectedEvent, sdobSelectedComp, sdobSelectedTeam, sdobSelectedRound]);
+
+  useEffect(() => {
+    // Setup Segments with tags
+    updateSegmentTags();
+  }, [sdobSelectedComp, sdobSelectedTeam, sdobSelectedRound])
+
 
   const captureSnapshot = useCallback(async () => {
     if (!filePath) return;
@@ -2414,6 +2620,83 @@ function App() {
     return <track default kind="subtitles" label={activeSubtitle.lang} srcLang="en" src={activeSubtitle.url} />;
   }
 
+  // Skydive or Bust Functions
+  const onSdobSetSlatePress = useCallback(async () => {
+    if (working || !filePath || !isDurationValid(duration)) {
+      return;
+    }
+
+    if (!sdobSelectedComp) {
+      errorToast('Must Select a Competition');
+      return;
+    }
+
+    const eventInfo = sdobGetEventBySlug(sdobSelectedEvent);
+    const compInfo = sdobGetCompById(sdobSelectedComp) || {}
+    const teamInfo = sdobGetTeamById(sdobSelectedTeam) || {};
+    const roundInfo = sdobGetRoundByI(sdobSelectedRound) || {};
+    // const slateSegment = (compInfo.segments || []).find((seg) => seg.name == 'slate');
+    // if (!slateSegment) {
+    //   errorToast('No Slate needed for this video');
+    //   return;
+    // }
+
+    // if (cutSegments.length < 1) {
+    //   const currentTime = getCurrentTime();
+    //   const cutSegmentsNew = [
+    //     ...cutSegments,
+    //     createIndexedSegment({ segment: { 
+    //       start: Math.min(Math.max(currentTime - slateSegment.pre, 0), duration), 
+    //       end: Math.min(Math.max(currentTime + slateSegment.post, 0), duration)
+    //     }, incrementCount: true }),
+    //   ];
+
+    //   setCutSegments(cutSegmentsNew);
+    //   setCurrentSegIndex(cutSegmentsNew.length - 1);
+    // } else {
+    //   await onSdobSetSlate();
+    // }
+  }, [working, filePath, duration, cutSegments, setCurrentSegIndex, onSdobSetSlate]);
+
+  const onSdobSetExitPress = useCallback(async () => {
+    if (working || !filePath || !isDurationValid(duration)) {
+      return;
+    }
+
+    if (!sdobSelectedComp) {
+      errorToast('Must Select a Competition');
+      return;
+    }
+
+    const eventInfo = sdobGetEventBySlug(sdobSelectedEvent);
+    const compInfo = sdobGetCompById(sdobSelectedComp) || {}
+    const teamInfo = sdobGetTeamById(sdobSelectedTeam) || {};
+    const roundInfo = sdobGetRoundByI(sdobSelectedRound) || {};
+
+    // const exitSegment = (compInfo.segments || []).find((seg) => seg.name == 'exit');
+    // if (!exitSegment) {
+    //   errorToast('No Exit needed for this video');
+    //   return;
+    // }
+
+    // if (cutSegments.length < 2) {
+    //   const currentTime = getCurrentTime();
+    //   const cutSegmentsNew = [
+    //     ...cutSegments,
+    //     createIndexedSegment({ segment: { 
+    //       start: Math.min(Math.max(currentTime - exitSegment.pre, 0), duration), 
+    //       end: Math.min(Math.max(currentTime + exitSegment.post, 0), duration)
+    //     }, incrementCount: true }),
+    //   ];
+
+    //   setCutSegments(cutSegmentsNew);
+    //   setCurrentSegIndex(cutSegmentsNew.length - 1);
+    // } else {
+    //   await onSdobSetExit();
+    // }
+  }, [working, filePath, duration, cutSegments, onSdobSetExit]);
+
+
   // throw new Error('Test error boundary');
 
   return (
@@ -2435,6 +2718,18 @@ function App() {
               numStreamsTotal={numStreamsTotal}
               setStreamsSelectorShown={setStreamsSelectorShown}
               selectedSegments={selectedSegmentsOrInverse}
+
+
+              sdob={sdob}
+
+              sdobSelectedComp={sdobSelectedComp}
+              sdobSelectedTeam={sdobSelectedTeam}
+              sdobSelectedRound={sdobSelectedRound}
+  
+              sdobGetEventBySlug={sdobGetEventBySlug}
+              sdobGetCompById={sdobGetCompById}
+              sdobGetTeamById={sdobGetTeamById}
+              sdobGetRoundByI={sdobGetRoundByI}              
             />
 
             <div style={{ flexGrow: 1, display: 'flex', overflowY: 'hidden' }}>
@@ -2572,6 +2867,10 @@ function App() {
                     setEditingSegmentTags={setEditingSegmentTags}
                     setEditingSegmentTagsSegmentIndex={setEditingSegmentTagsSegmentIndex}
                     onEditSegmentTags={onEditSegmentTags}
+
+                    sdobCompList={sdobCompList}
+                    sdobTeamList={sdobTeamList}
+                    sdobRoundList={sdobRoundList}
                   />
                 )}
               </AnimatePresence>
@@ -2664,6 +2963,41 @@ function App() {
                 updateSegAtIndex={updateSegAtIndex}
                 playerTime={playerTime}
                 addSegment={addSegment}
+
+
+                sdob={sdob}
+                sdobRefreshAPI={sdobRefreshAPI}
+                setSdobRefreshAPI={setSdobRefreshAPI}
+                onSdobOpenFileClick={openFilesDialog}
+                onSdobSetSlatePress={onSdobSetSlatePress}
+                onSdobSetExitPress={onSdobSetExitPress}
+  
+                setSdobSelectedComp={setSdobSelectedComp}
+                setSdobSelectedTeam={setSdobSelectedTeam}
+                setSdobSelectedRound={setSdobSelectedRound}
+  
+                sdobSelectedComp={sdobSelectedComp}
+                sdobSelectedTeam={sdobSelectedTeam}
+                sdobSelectedRound={sdobSelectedRound}
+                sdobEventList={sdobEventList}
+                sdobCompList={sdobCompList}
+                sdobTeamList={sdobTeamList}
+                sdobRoundList={sdobRoundList}
+                setSdobEventList={setSdobEventList}
+                setSdobCompList={setSdobCompList}
+                setSdobTeamList={setSdobTeamList}
+                setSdobRoundList={setSdobRoundList}
+  
+                setSdobTeamConfirmVisible={setSdobTeamConfirmVisible}
+                sdobTeamConfirmVisible={sdobTeamConfirmVisible}
+                onSdobTeamConfirm={onSdobTeamConfirm}
+                sdobCloseTeamConfirm={sdobCloseTeamConfirm}
+  
+                sdobGetEventBySlug={sdobGetEventBySlug}
+                sdobGetCompById={sdobGetCompById}
+                sdobGetTeamById={sdobGetTeamById}
+                sdobGetRoundByI={sdobGetRoundByI}
+  
               />
             </div>
 
@@ -2712,6 +3046,10 @@ function App() {
                 askForCleanupChoices={askForCleanupChoices}
                 toggleStoreProjectInWorkingDir={toggleStoreProjectInWorkingDir}
                 simpleMode={simpleMode}
+                sdob={sdob}
+                sdobEventList={sdobEventList}
+                sdobRefreshAPI={sdobRefreshAPI}
+                setSdobRefreshAPI={setSdobRefreshAPI}
               />
             </Sheet>
 

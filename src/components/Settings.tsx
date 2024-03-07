@@ -1,6 +1,6 @@
 import { memo, useCallback, useMemo, useState } from 'react';
 import { FaYinYang, FaKeyboard } from 'react-icons/fa';
-import { GlobeIcon, CleanIcon, CogIcon, Button, NumericalIcon, FolderCloseIcon, DocumentIcon, TimeIcon } from 'evergreen-ui';
+import { GlobeIcon, CleanIcon, CogIcon, Button, NumericalIcon, FolderCloseIcon, DocumentIcon, TimeIcon, Table, TextInputField } from 'evergreen-ui';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 
@@ -46,17 +46,27 @@ const Settings = memo(({
   askForCleanupChoices,
   toggleStoreProjectInWorkingDir,
   simpleMode,
+  
+  sdob,
+  sdobEventList,
+  sdobRefreshAPI,
+  setSdobRefreshAPI
 }: {
   onTunerRequested: (type: TunerType) => void,
   onKeyboardShortcutsDialogRequested: () => void,
   askForCleanupChoices: () => Promise<void>,
   toggleStoreProjectInWorkingDir: () => Promise<void>,
   simpleMode: boolean,
+  
+  sdob,
+  sdobEventList,
+  sdobRefreshAPI,
+  setSdobRefreshAPI
 }) => {
   const { t } = useTranslation();
   const [showAdvanced, setShowAdvanced] = useState(!simpleMode);
 
-  const { customOutDir, changeOutDir, keyframeCut, toggleKeyframeCut, timecodeFormat, setTimecodeFormat, invertCutSegments, setInvertCutSegments, askBeforeClose, setAskBeforeClose, enableAskForImportChapters, setEnableAskForImportChapters, enableAskForFileOpenAction, setEnableAskForFileOpenAction, autoSaveProjectFile, setAutoSaveProjectFile, invertTimelineScroll, setInvertTimelineScroll, language, setLanguage, hideNotifications, setHideNotifications, autoLoadTimecode, setAutoLoadTimecode, enableAutoHtml5ify, setEnableAutoHtml5ify, customFfPath, setCustomFfPath, storeProjectInWorkingDir, mouseWheelZoomModifierKey, setMouseWheelZoomModifierKey, captureFrameMethod, setCaptureFrameMethod, captureFrameQuality, setCaptureFrameQuality, captureFrameFileNameFormat, setCaptureFrameFileNameFormat, enableNativeHevc, setEnableNativeHevc, enableUpdateCheck, setEnableUpdateCheck, allowMultipleInstances, setAllowMultipleInstances, preferStrongColors, setPreferStrongColors, treatInputFileModifiedTimeAsStart, setTreatInputFileModifiedTimeAsStart, treatOutputFileModifiedTimeAsStart, setTreatOutputFileModifiedTimeAsStart, exportConfirmEnabled, toggleExportConfirmEnabled } = useUserSettings();
+  const { customOutDir, changeOutDir, keyframeCut, toggleKeyframeCut, timecodeFormat, setTimecodeFormat, invertCutSegments, setInvertCutSegments, askBeforeClose, setAskBeforeClose, enableAskForImportChapters, setEnableAskForImportChapters, enableAskForFileOpenAction, setEnableAskForFileOpenAction, autoSaveProjectFile, setAutoSaveProjectFile, invertTimelineScroll, setInvertTimelineScroll, language, setLanguage, hideNotifications, setHideNotifications, autoLoadTimecode, setAutoLoadTimecode, enableAutoHtml5ify, setEnableAutoHtml5ify, customFfPath, setCustomFfPath, storeProjectInWorkingDir, mouseWheelZoomModifierKey, setMouseWheelZoomModifierKey, captureFrameMethod, setCaptureFrameMethod, captureFrameQuality, setCaptureFrameQuality, captureFrameFileNameFormat, setCaptureFrameFileNameFormat, enableNativeHevc, setEnableNativeHevc, enableUpdateCheck, setEnableUpdateCheck, allowMultipleInstances, setAllowMultipleInstances, preferStrongColors, setPreferStrongColors, treatInputFileModifiedTimeAsStart, setTreatInputFileModifiedTimeAsStart, treatOutputFileModifiedTimeAsStart, setTreatOutputFileModifiedTimeAsStart, exportConfirmEnabled, toggleExportConfirmEnabled, setSdobSelectedEvent, sdobSelectedEvent, sdobUploadServer, setSdobUploadServer, sdobAPIServer, setSdobAPIServer } = useUserSettings();
 
   const onLangChange = useCallback((e) => {
     const { value } = e.target;
@@ -82,6 +92,10 @@ const Settings = memo(({
     const newCustomFfPath = await askForFfPath(customFfPath);
     setCustomFfPath(newCustomFfPath);
   }, [customFfPath, setCustomFfPath]);
+
+  const onSdobRefreshApiClick = useCallback(async () => {
+    setSdobRefreshAPI(sdobRefreshAPI + 1);
+  }, [])
 
   return (
     <>
@@ -449,6 +463,45 @@ const Settings = memo(({
               </td>
             </Row>
           )}
+
+
+          {sdob && (
+          <>
+            <Row>
+              <KeyCell>
+                {t('Skydive Or Bust API Service')} &nbsp;&nbsp;
+                <Button iconBefore={<FaKeyboard />} onClick={onSdobRefreshApiClick}>Update</Button>
+              </KeyCell>
+              <Table.TextCell>
+                <TextInputField
+                  label={t('Server')}
+                  value={sdobAPIServer}
+                  onChange={e => setSdobAPIServer(e.target.value)}
+                />
+              </Table.TextCell>
+            </Row>
+            <Row>
+              <KeyCell>{t('Skydive Or Bust Upload Service')}</KeyCell>
+              <Table.TextCell>
+                <TextInputField
+                  label={t('Server')}
+                  value={sdobUploadServer}
+                  onChange={e => setSdobUploadServer(e.target.value)}
+                />
+              </Table.TextCell>
+            </Row>
+            <Row>
+              <KeyCell>Skydiving Event</KeyCell>
+              <Table.TextCell>
+                <Select value={sdobSelectedEvent || ''} onChange={e => setSdobSelectedEvent(e.target.value)}>
+                  <option key="" value="">{t('Select Event')}</option>
+                  {(sdobEventList || []).map((event) => <option key={event.slug} value={event.slug}>{event.heading}</option>)}
+                </Select>
+              </Table.TextCell>
+            </Row>          
+          </>
+        )}
+
         </tbody>
       </table>
     </>

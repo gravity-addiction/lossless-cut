@@ -15,6 +15,12 @@ import ToggleExportConfirm from './components/ToggleExportConfirm';
 import CaptureFormatButton from './components/CaptureFormatButton';
 import Select from './components/Select';
 
+import SdobSelectVideoButton from './components/SDOB-SelectVideoButton';
+import SdobSelectTeamButton from './components/SDOB-SelectTeamButton';
+import SdobSetSlateButton from './components/SDOB-SetSlateButton';
+import SdobSetExitButton from './components/SDOB-SetExitButton';
+import SdobTeamConfirm from './SDOB-TeamConfirm';
+
 import SimpleModeButton from './components/SimpleModeButton';
 import { withBlur, mirrorTransform, checkAppPath } from './util';
 import { toast } from './swal';
@@ -180,7 +186,21 @@ const BottomBar = memo(({
   darkMode, setDarkMode,
   toggleShowThumbnails, toggleWaveformMode, waveformMode, showThumbnails,
   outputPlaybackRate, setOutputPlaybackRate,
-  filePath, duration, workingRef, updateSegAtIndex, playerTime, addSegment
+  filePath, duration, workingRef, updateSegAtIndex, playerTime, addSegment,
+
+  sdob, sdobRefreshAPI, setSdobRefreshAPI, onSdobOpenFileClick,
+  onSdobSetSlatePress, onSdobSetExitPress,
+  
+  setSdobSelectedComp, setSdobSelectedTeam, setSdobSelectedRound,
+  sdobSelectedComp, sdobSelectedTeam, sdobSelectedRound,
+  sdobEventList, sdobCompList, sdobTeamList, sdobRoundList,
+  setSdobEventList, setSdobCompList, setSdobTeamList, setSdobRoundList,
+  
+  setSdobTeamConfirmVisible, sdobTeamConfirmVisible,
+  onSdobTeamConfirm, sdobCloseTeamConfirm,
+
+  sdobGetEventBySlug,
+  sdobGetCompById, sdobGetTeamById, sdobGetRoundByI
 }) => {
   const { t } = useTranslation();
   const { getSegColor } = useSegColors();
@@ -385,6 +405,28 @@ const BottomBar = memo(({
         className="no-user-select"
         style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '3px 4px' }}
       >
+
+
+        {sdob && (
+          <>
+            <div style={{ padding: '0px 10px', fontSize: '20px' }}>
+              <small style={{ color: primaryColor }}>Comp:&nbsp;</small> 
+              <strong>{ sdobGetCompById(sdobSelectedComp)?.name }</strong>
+            </div>
+            <div style={{ padding: '0px 10px', fontSize: '20px'  }}>
+              <small style={{ color: primaryColor }}>Team:&nbsp;</small> { sdobGetTeamById(sdobSelectedTeam)?.teamNumber } { sdobGetTeamById(sdobSelectedTeam)?.name }
+            </div>
+            <div style={{ padding: '0px 10px', fontSize: '20px'  }}>
+              <small style={{ color: primaryColor }}>Round:&nbsp;</small> { sdobGetRoundByI(sdobSelectedRound)?.roundNum }
+            </div>
+          </>
+        )}  
+
+      </div>
+      <div
+        className="no-user-select"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '3px 4px' }}
+      >
         <SimpleModeButton style={{ flexShrink: 0 }} />
 
         {simpleMode && <div role="button" onClick={toggleSimpleMode} style={{ marginLeft: 5, fontSize: '90%' }}>{t('Toggle advanced view')}</div>}
@@ -412,6 +454,94 @@ const BottomBar = memo(({
 
         <div style={{ flexGrow: 3 }}>&nbsp;</div>
 
+
+
+        {sdob && (
+          <>
+            <div style={{ flexGrow: 1 }} />
+            <SdobSelectVideoButton
+              size={2}
+              onClick={onSdobOpenFileClick}
+            />
+                        
+            <SdobSelectTeamButton
+              size={2}
+              onClick={setSdobTeamConfirmVisible}
+            />
+            
+            {sdob && !sdobSelectedTeam && (
+              <h2 color="red">&lt;- Click Here!</h2>
+            )}            
+
+            <SdobTeamConfirm visible={sdobTeamConfirmVisible}
+              isFileOpened={isFileOpened}
+              onClosePress={sdobCloseTeamConfirm} 
+              onSdobTeamConfirm={onSdobTeamConfirm}
+              onSdobOpenFileClick={onSdobOpenFileClick}
+              sdobGetCompById={sdobGetCompById}
+              sdobGetEventBySlug={sdobGetEventBySlug}
+
+              sdobRefreshAPI={sdobRefreshAPI}
+              setSdobRefreshAPI={setSdobRefreshAPI}
+
+              sdobEventList={sdobEventList} 
+              sdobCompList={sdobCompList} 
+              sdobTeamList={sdobTeamList} 
+              sdobRoundList={sdobRoundList}
+              setSdobSelectedComp={setSdobSelectedComp}
+              setSdobSelectedTeam={setSdobSelectedTeam}
+              setSdobSelectedRound={setSdobSelectedRound}
+
+              setSdobEventList={setSdobEventList} 
+              setSdobCompList={setSdobCompList}
+              setSdobTeamList={setSdobTeamList}
+              setSdobRoundList={setSdobRoundList}
+
+              onSdobSetSlatePress={onSdobSetSlatePress}
+              onSdobSetExitPress={onSdobSetExitPress}
+
+              sdobSelectedComp={sdobSelectedComp}
+              sdobSelectedTeam={sdobSelectedTeam}
+              sdobSelectedRound={sdobSelectedRound}
+
+              setSdobTeamConfirmVisible={setSdobTeamConfirmVisible}
+              sdobTeamConfirmVisible={sdobTeamConfirmVisible}
+              sdobCloseTeamConfirm={sdobCloseTeamConfirm}
+            />
+
+          </>
+        )}
+
+        <div style={{ flexGrow: 3 }}>&nbsp;</div>
+
+        {sdob && hasVideo && (
+          <>
+            <div style={{ flexGrow: 1 }} />
+            <SdobSetSlateButton
+              size={2}
+              onClick={onSdobSetSlatePress}
+            />
+
+            <SdobSetExitButton
+              size={2}
+              onClick={onSdobSetExitPress}
+            />
+          </>
+        )}
+
+        <div style={{ flexGrow: 1 }} />
+{/* 
+        {sdob && hasVideo && sdobSelectedTeam && (
+          <>
+            <SdobExportButton
+              size={2}
+              onClick={onExportConfirm}
+            />
+            <div style={{ flexGrow: 1 }} />
+          </>
+        )} */}
+
+
         {hasVideo && (
           <>
             <span style={{ textAlign: 'right', display: 'inline-block' }}>{isRotationSet && rotationStr}</span>
@@ -434,7 +564,6 @@ const BottomBar = memo(({
             role="button"
           />
         )}
-
         {hasVideo && (
           <>
             {!simpleMode && <CaptureFormatButton height={20} />}
@@ -454,12 +583,14 @@ const BottomBar = memo(({
           />
         </div>
 
-        {(!simpleMode || !exportConfirmEnabled) && <ToggleExportConfirm style={{ marginRight: 5 }} />}
-
-        <ExportButton size={1.3} segmentsToExport={segmentsToExport} areWeCutting={areWeCutting} onClick={onExportPress} />
-      </div>
+        {!sdob && (!simpleMode || !exportConfirmEnabled) && <ToggleExportConfirm style={{ marginRight: 5 }} />}
+        {sdob && hasVideo && sdobSelectedTeam && (
+          <ExportButton size={1.3} segmentsToExport={segmentsToExport} areWeCutting={areWeCutting} onClick={onExportPress} />
+        )}
+        </div>
       
         <div style={{ flexGrow: 1 }} />
+      
     </>
   );
 });
