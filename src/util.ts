@@ -44,6 +44,7 @@ export function getOutPath({ customOutDir, filePath, fileName }: { customOutDir?
   return join(getOutDir(customOutDir, filePath), fileName);
 }
 
+export const getPrefixededFileName = (filePath: string | undefined, ext: string, namePrefix: string) => `${namePrefix}-${getFileBaseName(filePath)}${ext}`;
 export const getSuffixedFileName = (filePath: string | undefined, nameSuffix: string) => `${getFileBaseName(filePath)}-${nameSuffix}`;
 
 export function getSuffixedOutPath({ customOutDir, filePath, nameSuffix }: { customOutDir?: string, filePath?: string, nameSuffix: string }) {

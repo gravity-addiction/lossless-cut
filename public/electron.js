@@ -27,6 +27,9 @@ require('./i18n');
 
 const { app, ipcMain, shell, BrowserWindow, nativeTheme } = electron;
 
+const usb = require('usb');
+const sdob = require('./sdob');
+
 // https://chromestatus.com/feature/5748496434987008
 // https://peter.sh/experiments/chromium-command-line-switches/
 // https://chromium.googlesource.com/chromium/src/+/main/third_party/blink/renderer/platform/runtime_enabled_features.json5
@@ -221,6 +224,47 @@ function safeRequestSingleInstanceLock(additionalData) {
   return app.requestSingleInstanceLock(additionalData);
 }
 
+
+let deviceList = [];
+
+const webusb = new usb.WebUSB({
+  allowAllDevices: true
+});
+
+const showDevices = async () => {
+  const devices = await webusb.getDevices();
+  console.log('devices', devices);
+  
+  const newDeviceList = devices.map(device => ({
+    busNumber: device.device?.busNumber,
+    deviceAddress: device.device?.deviceAddress,
+    vendorId: device.vendorId,
+    productId: device.productId
+  }))
+
+  const isSameDevice = (a, b) => 
+    a.busNumber === b.busNumber
+    && a.deviceAddress === b.deviceAddress
+    && a.vendorId === b.vendorId
+    && a.productId === b.productId;
+
+  const onlyInLeft = (left, right, compareFunction) => 
+    left.filter(leftValue =>
+      !right.some(rightValue => 
+        compareFunction(leftValue, rightValue)));
+
+  const newDevices = onlyInLeft(newDeviceList, deviceList, isSameDevice);
+  const missingDevices = onlyInLeft(deviceList, newDeviceList, isSameDevice);
+
+  console.log('New', newDevices);
+  console.log('Missing', missingDevices);
+  deviceList = newDeviceList;
+
+  const text = devices.map(d => `${d.vendorId}\t${d.productId}\t${d.serialNumber || '<no serial>'}`);
+  text.unshift('VID\tPID\tSerial\n-------------------------------------');
+  console.log(text)
+};
+
 function initApp() {
   // On macOS, the system enforces single instance automatically when users try to open a second instance of your app in Finder, and the open-file and open-url events will be emitted for that.
   // However when users start your app in command line, the system's single instance mechanism will be bypassed, and you have to use this method to ensure single instance.
@@ -245,6 +289,9 @@ function initApp() {
 
   // Quit when all windows are closed.
   app.on('window-all-closed', () => {
+    webusb.removeEventListener('connect', showDevices);
+    webusb.removeEventListener('disconnect', showDevices);
+
     app.quit();
   });
 
@@ -290,6 +337,26 @@ function initApp() {
   ipcMain.on('apiKeyboardActionResponse', (e, { id }) => {
     apiKeyboardActionRequests.get(id)?.();
   });
+
+  ipcMain.handle('sdobAddDbRecord', (e, { file, compInfo }) => {
+    console.log('S File', file);
+    console.log('CompInfo', compInfo);
+    sdob.getEventId(compInfo.eventSlug).then((eventId) => {
+      if (!eventId) {
+        console.log('Unable to send File');
+        mainWindow.webContents.send('sdobUploadFailed', { file, compInfo, error: 'Unable to get eventId from slug' });
+        return Promise.reject();
+      } else {
+        compInfo.eventId = eventId;
+        return sdob.addDbRecords({file, compInfo })
+      }
+    }).then((compData) => {
+      console.log(compData);
+      // Submit transcoder
+
+      console.log('Finished Record');
+    });
+  })
 }
 
 
@@ -348,6 +415,9 @@ const readyPromise = app.whenReady();
         .then((name) => logger.info('Added Extension', name))
         .catch((err) => logger.error('Failed to add extension', err));
     }
+
+    webusb.addEventListener('connect', showDevices);
+    webusb.addEventListener('disconnect', showDevices);
 
     createWindow();
     updateMenu();

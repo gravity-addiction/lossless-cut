@@ -128,10 +128,12 @@
     "lodash": "^4.17.19",
     "mime-types": "^2.1.14",
     "morgan": "^1.10.0",
+    "mysql2": "^3.9.2",
+    "node-scp": "^0.0.23",
     "semver": "^7.5.2",
     "string-to-stream": "^1.1.1",
     "strtok3": "^6.0.0",
-    "winreg": "^1.2.5",
+    "usb": "^2.12.1",
     "winston": "^3.8.1",
     "yargs-parser": "^21.0.0"
   },
@@ -443,7 +445,6 @@
   },
   "packageManager": "yarn@4.0.2",
   "resolutions": {
-    "app-builder-lib@24.8.0": "patch:app-builder-lib@npm%3A24.8.0#./.yarn/patches/app-builder-lib-npm-24.8.0-51e1f5cd3f.patch",
-    "node-adodb": "portal:/C:/Users/Gary Taylor/Development/lossless-cut/node-adodb"
+    "app-builder-lib@24.8.0": "patch:app-builder-lib@npm%3A24.8.0#./.yarn/patches/app-builder-lib-npm-24.8.0-51e1f5cd3f.patch"
   }
 }

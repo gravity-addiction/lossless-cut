@@ -403,7 +403,7 @@ const BottomBar = memo(({
 
       <div
         className="no-user-select"
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '3px 4px' }}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3px 4px' }}
       >
 
 

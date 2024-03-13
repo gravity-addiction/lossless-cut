@@ -9,6 +9,7 @@ import i18n from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { produce } from 'immer';
 import screenfull from 'screenfull';
+import { WebUSB, getDeviceList } from 'usb';
 
 import fromPairs from 'lodash/fromPairs';
 import sortBy from 'lodash/sortBy';
@@ -68,7 +69,7 @@ import {
   getOutPath, getSuffixedOutPath, handleError, getOutDir,
   isStoreBuild, dragPreventer,
   havePermissionToReadFile, resolvePathIfNeeded, getPathReadAccessError, html5ifiedPrefix, html5dummySuffix, findExistingHtml5FriendlyFile,
-  deleteFiles, isOutOfSpaceError, isExecaFailure, readFileSize, readFileSizes, checkFileSizes, setDocumentTitle, getOutFileExtension, getSuffixedFileName, mustDisallowVob, readVideoTs, readDirRecursively, getImportProjectType,
+  deleteFiles, isOutOfSpaceError, isExecaFailure, readFileSize, readFileSizes, checkFileSizes, setDocumentTitle, getOutFileExtension, getPrefixededFileName, getSuffixedFileName, mustDisallowVob, readVideoTs, readDirRecursively, getImportProjectType,
   calcShouldShowWaveform, calcShouldShowKeyframes, mediaSourceQualities,
 } from './util';
 import { toast, errorToast } from './swal';
@@ -176,6 +177,8 @@ function App() {
   const [sdobSelectedTeam, setSdobSelectedTeam] = useState();
   const [sdobSelectedRound, setSdobSelectedRound] = useState();
 
+  const [sdobVideoTimes, setSdobVideoTimes] = useState({ slate: -1.00, exit: -1.00 });
+
   const incrementMediaSourceQuality = useCallback(() => setMediaSourceQuality((v) => (v + 1) % mediaSourceQualities.length), []);
 
   // Batch state / concat files
@@ -206,7 +209,7 @@ function App() {
 
   const {
     captureFormat, setCaptureFormat, customOutDir, setCustomOutDir, keyframeCut, setKeyframeCut, preserveMovData, setPreserveMovData, movFastStart, setMovFastStart, avoidNegativeTs, autoMerge, timecodeFormat, invertCutSegments, setInvertCutSegments, autoExportExtraStreams, askBeforeClose, enableAskForImportChapters, enableAskForFileOpenAction, playbackVolume, setPlaybackVolume, autoSaveProjectFile, wheelSensitivity, invertTimelineScroll, language, ffmpegExperimental, hideNotifications, autoLoadTimecode, autoDeleteMergedSegments, exportConfirmEnabled, setExportConfirmEnabled, segmentsToChapters, setSegmentsToChapters, preserveMetadataOnMerge, setPreserveMetadataOnMerge, simpleMode, setSimpleMode, outSegTemplate, setOutSegTemplate, keyboardSeekAccFactor, keyboardNormalSeekSpeed, treatInputFileModifiedTimeAsStart, treatOutputFileModifiedTimeAsStart, outFormatLocked, setOutFormatLocked, safeOutputFileName, setSafeOutputFileName, enableAutoHtml5ify, segmentsToChaptersOnly, keyBindings, setKeyBindings, resetKeyBindings, enableSmartCut, customFfPath, storeProjectInWorkingDir, setStoreProjectInWorkingDir, enableOverwriteOutput, mouseWheelZoomModifierKey, captureFrameMethod, captureFrameQuality, captureFrameFileNameFormat, enableNativeHevc, cleanupChoices, setCleanupChoices, darkMode, setDarkMode, preferStrongColors, outputFileNameMinZeroPadding, cutFromAdjustmentFrames,
-    sdobSelectedEvent, setSdobSelectedEvent, sdobUploadServer, setSdobUploadServer, sdobAPIServer, setSdobAPIServer
+    sdobSelectedEvent, setSdobSelectedEvent, sdobUploadServer, sdobAPIServer
   } = allUserSettings;
 
   useEffect(() => {
@@ -757,7 +760,7 @@ function App() {
 
   const resetMergedOutFileName = useCallback(() => {
     const ext = getOutFileExtension({ isCustomFormatSelected, outFormat: fileFormat, filePath });
-    const outFileName = getSuffixedFileName(filePath, `cut-merged-${Date.now()}${ext}`);
+    const outFileName = getPrefixededFileName(filePath, `${ext}`, `${Date.now()}`);
     setMergedOutFileName(outFileName);
   }, [fileFormat, filePath, isCustomFormatSelected]);
 
@@ -807,10 +810,13 @@ function App() {
     setOutputPlaybackRateState(1);
 
     // Skydive or Bust Reset
-    setSdobTeamConfirmVisible(false);
+    if (!sdobSelectedTeam) {
+      setSdobTeamConfirmVisible(true);
+    }
+    setSdobVideoTimes({ slate: -1.00, exit: -1.00 });
 
     cancelRenderThumbnails();
-  }, [cutSegmentsHistory, clearSegments, setFileFormat, setDetectedFileFormat, setDeselectedSegmentIds, resetMergedOutFileName, cancelRenderThumbnails]);
+  }, [cutSegmentsHistory, clearSegments, setFileFormat, setDetectedFileFormat, setDeselectedSegmentIds, resetMergedOutFileName, cancelRenderThumbnails, sdobSelectedTeam, setSdobVideoTimes]);
 
 
   const showUnsupportedFileMessage = useCallback(() => {
@@ -1325,6 +1331,23 @@ function App() {
 
       console.log('RevealPath', revealPath);
 
+      const eventSlug = (sdobGetEventBySlug(sdobSelectedEvent) || { slug: 'unknown'}).slug;
+
+      let uploadPath = `${(sdobGetEventBySlug(sdobSelectedEvent) || { slug: 'unknown'}).slug || 'unknown'}/`;
+      let uploadFile = `${(sdobGetTeamById(sdobSelectedTeam) || { teamNumber: ''}).teamNumber}_${(sdobGetRoundByI(sdobSelectedRound) || { roundNum: 0 }).roundNum}.${fileFormat}`
+      // console.log('uploadPath', uploadPath, uploadFile)
+      const compInfo = {
+        eventId: sdobSelectedEvent,
+        compId: sdobSelectedComp,
+        teamId: sdobSelectedTeam,
+        rndNumber: (sdobSelectedRound || 0) + 1,
+        eventSlug,
+        uploadPath,
+        uploadFile
+      };
+      electron.ipcRenderer.invoke('sdobAddDbRecord', { file: revealPath, compInfo });
+
+
       // if (revealPath) {
       //   const options = {
       //     method: "POST",
@@ -1387,6 +1410,7 @@ function App() {
       setSdobSelectedTeam(undefined);
       setSdobSelectedRound(undefined);
       setSdobTeamConfirmVisible(true);
+      setSdobVideoTimes({ slate: -1.00, exit: -1.00 });
     } catch (err) {
       if (err instanceof Error) {
         if ('killed' in err && err.killed === true) {
@@ -1425,66 +1449,6 @@ function App() {
     }
   }, [filePath, exportConfirmEnabled, exportConfirmVisible, onExportConfirm]);
 
-  // Skydive or Bust Functions
-  const onSdobSetSlate = useCallback(async () => {
-    if (working || !filePath || !isDurationValid(duration)) {
-      return;
-    }
-
-    if (!sdobSelectedComp) {
-      errorToast('Must Select a Competition');
-      return;
-    }
-
-    const myComp = sdobGetCompById(sdobSelectedComp);
-    // const slateSegment = (myComp.segments || []).find((seg) => seg.name == 'slate');
-    // console.log('Got Slate Seg', slateSegment);
-    // if (!slateSegment) {
-    //   errorToast('No Slate needed for this video');
-    //   return;
-    // }
-
-    // try {
-    //   setCurrentSegIndex(0);
-    //   const currentTime = getCurrentTime();
-    //   updateSegAtIndex(0, {
-    //     start: Math.min(Math.max(currentTime - slateSegment.pre, 0), duration),
-    //     end: Math.min(Math.max(currentTime + slateSegment.post, 0), duration)
-    //   });
-    // } catch (err) {
-    //   errorToast(err.message);
-    // }
-  }, [working, filePath, duration, updateSegAtIndex]);
-
-  const onSdobSetExit = useCallback(async () => {
-    console.log('Set Exit', sdobSelectedComp);
-    if (working || !filePath || !isDurationValid(duration)) {
-      return;
-    }
-
-    if (!sdobSelectedComp) {
-      errorToast('Must Select a Competition');
-      return;
-    }
-
-    const myComp = sdobGetCompById(sdobSelectedComp);
-    // const exitSegment = (myComp.segments || []).find((seg) => seg.name == 'exit');
-    // if (!exitSegment) {
-    //   errorToast('No Exit needed for this video');
-    //   return;
-    // }
-
-    // try {
-    //   setCurrentSegIndex(1);
-    //   const currentTime = getCurrentTime();
-    //   updateSegAtIndex(1, {
-    //     start: Math.min(Math.max(currentTime - exitSegment.pre, 0), duration),
-    //     end: Math.min(Math.max(currentTime + exitSegment.post, 0), duration)
-    //   });
-    // } catch (err) {
-    //   errorToast(err.message);
-    // }
-  }, [working, filePath, duration, updateSegAtIndex]);
 
   const sdobCloseTeamConfirm = useCallback(() => {
     setSdobTeamConfirmVisible(false);
@@ -1524,6 +1488,79 @@ function App() {
   const sdobGetRoundByI = (round_i) => {
     return (sdobRoundList || []).find((rnd: any) => String(rnd.i) === String(round_i));
   };
+
+  // Skydive or Bust Functions
+  const sdobSetCuts = useCallback(async () => {
+    if (working || !filePath || !isDurationValid(duration)) {
+      return;
+    }
+
+    const segments: any[] = [];
+    if (sdobVideoTimes.slate >= 0) {
+      const slateStartTime = (sdobVideoTimes.slate - 5 < 0) ? 0 : sdobVideoTimes.slate - 5;
+      const slateEndTime = (sdobVideoTimes.slate + 10 > duration) ? duration : sdobVideoTimes.slate + 10;
+      segments.push({
+          "start": slateStartTime,
+          "end": slateEndTime,
+          "name": "Slate",
+          "segId": "slate",
+          "segColorIndex": 0
+      });
+    }
+    if (sdobVideoTimes.exit >=0) {
+      const exitStartTime = (sdobVideoTimes.exit - 5 < 0) ? 0 : sdobVideoTimes.exit - 5;
+      const exitEndTime = (sdobVideoTimes.exit + 45 > duration) ? duration : sdobVideoTimes.exit +45;
+      segments.push({
+          "start": exitStartTime,
+          "end": exitEndTime,
+          "name": "Exit",
+          "segId": "exit",
+          "segColorIndex": 1
+      })
+    }
+    loadCutSegments(segments, false);
+
+  }, [working, filePath, duration, sdobVideoTimes, loadCutSegments]);
+
+  const onSdobSetSlatePress = useCallback(async () => {
+    if (working || !filePath || !isDurationValid(duration)) {
+      return;
+    }
+    
+    // if (!sdobSelectedComp) {
+    //   errorToast('Must Select a Competition');
+    //   return;
+    // }
+
+    // const eventInfo = sdobGetEventBySlug(sdobSelectedEvent);
+    // const compInfo = sdobGetCompById(sdobSelectedComp) || {}
+    // const teamInfo = sdobGetTeamById(sdobSelectedTeam) || {};
+    // const roundInfo = sdobGetRoundByI(sdobSelectedRound) || {};
+    
+    sdobVideoTimes.slate = getRelevantTime();
+    sdobSetCuts();
+  }, [working, filePath, duration, sdobVideoTimes, getRelevantTime, sdobSetCuts]);
+
+  const onSdobSetExitPress = useCallback(async () => {
+    if (working || !filePath || !isDurationValid(duration)) {
+      return;
+    }
+
+    // if (!sdobSelectedComp) {
+    //   errorToast('Must Select a Competition');
+    //   return;
+    // }
+
+    // const eventInfo = sdobGetEventBySlug(sdobSelectedEvent);
+    // const compInfo = sdobGetCompById(sdobSelectedComp) || {}
+    // const teamInfo = sdobGetTeamById(sdobSelectedTeam) || {};
+    // const roundInfo = sdobGetRoundByI(sdobSelectedRound) || {};
+    // const curTime = getRelevantTime();
+
+    sdobVideoTimes.exit = getRelevantTime();
+    sdobSetCuts();
+
+  }, [working, filePath, duration, sdobVideoTimes, getRelevantTime, sdobSetCuts]);
 
   useEffect(() => {
     console.log('Fetching Event List: Event -', sdobSelectedEvent);
@@ -2161,6 +2198,9 @@ function App() {
       }
     } finally {
       setWorking(undefined);
+      // Skydive or Bust Slate Reset
+      setSdobVideoTimes({ slate: -1.00, exit: -1.00 });
+
     }
   }, [alwaysConcatMultipleFiles, batchLoadPaths, setWorking, isFileOpened, batchFiles.length, userOpenSingleFile, checkFileOpened, loadEdlFile, enableAskForFileOpenAction, addStreamSourceFile, filePath]);
 
@@ -2619,83 +2659,6 @@ function App() {
     if (!activeSubtitle) return null;
     return <track default kind="subtitles" label={activeSubtitle.lang} srcLang="en" src={activeSubtitle.url} />;
   }
-
-  // Skydive or Bust Functions
-  const onSdobSetSlatePress = useCallback(async () => {
-    if (working || !filePath || !isDurationValid(duration)) {
-      return;
-    }
-
-    if (!sdobSelectedComp) {
-      errorToast('Must Select a Competition');
-      return;
-    }
-
-    const eventInfo = sdobGetEventBySlug(sdobSelectedEvent);
-    const compInfo = sdobGetCompById(sdobSelectedComp) || {}
-    const teamInfo = sdobGetTeamById(sdobSelectedTeam) || {};
-    const roundInfo = sdobGetRoundByI(sdobSelectedRound) || {};
-    // const slateSegment = (compInfo.segments || []).find((seg) => seg.name == 'slate');
-    // if (!slateSegment) {
-    //   errorToast('No Slate needed for this video');
-    //   return;
-    // }
-
-    // if (cutSegments.length < 1) {
-    //   const currentTime = getCurrentTime();
-    //   const cutSegmentsNew = [
-    //     ...cutSegments,
-    //     createIndexedSegment({ segment: { 
-    //       start: Math.min(Math.max(currentTime - slateSegment.pre, 0), duration), 
-    //       end: Math.min(Math.max(currentTime + slateSegment.post, 0), duration)
-    //     }, incrementCount: true }),
-    //   ];
-
-    //   setCutSegments(cutSegmentsNew);
-    //   setCurrentSegIndex(cutSegmentsNew.length - 1);
-    // } else {
-    //   await onSdobSetSlate();
-    // }
-  }, [working, filePath, duration, cutSegments, setCurrentSegIndex, onSdobSetSlate]);
-
-  const onSdobSetExitPress = useCallback(async () => {
-    if (working || !filePath || !isDurationValid(duration)) {
-      return;
-    }
-
-    if (!sdobSelectedComp) {
-      errorToast('Must Select a Competition');
-      return;
-    }
-
-    const eventInfo = sdobGetEventBySlug(sdobSelectedEvent);
-    const compInfo = sdobGetCompById(sdobSelectedComp) || {}
-    const teamInfo = sdobGetTeamById(sdobSelectedTeam) || {};
-    const roundInfo = sdobGetRoundByI(sdobSelectedRound) || {};
-
-    // const exitSegment = (compInfo.segments || []).find((seg) => seg.name == 'exit');
-    // if (!exitSegment) {
-    //   errorToast('No Exit needed for this video');
-    //   return;
-    // }
-
-    // if (cutSegments.length < 2) {
-    //   const currentTime = getCurrentTime();
-    //   const cutSegmentsNew = [
-    //     ...cutSegments,
-    //     createIndexedSegment({ segment: { 
-    //       start: Math.min(Math.max(currentTime - exitSegment.pre, 0), duration), 
-    //       end: Math.min(Math.max(currentTime + exitSegment.post, 0), duration)
-    //     }, incrementCount: true }),
-    //   ];
-
-    //   setCutSegments(cutSegmentsNew);
-    //   setCurrentSegIndex(cutSegmentsNew.length - 1);
-    // } else {
-    //   await onSdobSetExit();
-    // }
-  }, [working, filePath, duration, cutSegments, onSdobSetExit]);
-
 
   // throw new Error('Test error boundary');
 
