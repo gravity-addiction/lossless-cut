@@ -1,6 +1,6 @@
 <div align="center">
 	<br>
-  <p><a href="https://mifi.no/losslesscut/"><img src="src/icon.svg" width="120" alt="LosslessCut" /></a></p>
+  <p><a href="https://mifi.no/losslesscut/"><img src="src/renderer/src/icon.svg" width="120" alt="LosslessCut" /></a></p>
   <p><b>LosslessCut</b></p>
   The swiss army knife of lossless video/audio editing
 	<br>
@@ -58,6 +58,8 @@ The main feature is lossless trimming and cutting of video and audio files, whic
 - Divide timeline into segments with length L or into N segments or even randomized segments!
 - Speed up / slow down video or audio file ([changing FPS](https://github.com/mifi/lossless-cut/issues/1712))
 - Basic [CLI](cli.md) and [HTTP API](api.md)
+- Show (DJI) embedded GPS track on a map
+- Losslessly Download videos over HTTP (e.g. HLS `.m3u8`)
 
 ## Example lossless use cases
 
@@ -113,14 +115,14 @@ For Linux these are some alternatives:
 
 If you prefer to download the executables manually, this will of course always be free:
 
-- Mac OS X: [Intel DMG](https://github.com/mifi/lossless-cut/releases/latest/download/LosslessCut-mac-x64.dmg) / [Apple Silicon DMG](https://github.com/mifi/lossless-cut/releases/latest/download/LosslessCut-mac-arm64.dmg)
-- Windows: [7zip](https://github.com/mifi/lossless-cut/releases/latest/download/LosslessCut-win-x64.7z) (Windows 7, 8 and 8.1 is **no longer supported** after [v3.50.0](https://github.com/mifi/lossless-cut/releases/tag/v3.50.0))
+- Mac OS X: [Intel DMG](https://github.com/mifi/lossless-cut/releases/latest/download/LosslessCut-mac-x64.dmg) / [Apple Silicon DMG](https://github.com/mifi/lossless-cut/releases/latest/download/LosslessCut-mac-arm64.dmg) (note that universal.pkg **does not work**)
+- Windows: [7zip](https://github.com/mifi/lossless-cut/releases/latest/download/LosslessCut-win-x64.7z) (Windows 7, 8 and 8.1 is [no longer supported](https://github.com/mifi/lossless-cut/discussions/1476) after [v3.50.0](https://github.com/mifi/lossless-cut/releases/tag/v3.50.0))
 - Linux: [x64 tar.bz2](https://github.com/mifi/lossless-cut/releases/latest/download/LosslessCut-linux-x64.tar.bz2) / [x64 AppImage](https://github.com/mifi/lossless-cut/releases/latest/download/LosslessCut-linux-x86_64.AppImage) / [arm64 tar.bz2](https://github.com/mifi/lossless-cut/releases/latest/download/LosslessCut-linux-arm64.tar.bz2) / [Raspberry Pi armv7l](https://github.com/mifi/lossless-cut/releases/latest/download/LosslessCut-linux-armv7l.tar.bz2)
 - [More releases](https://github.com/mifi/lossless-cut/releases) (note that APPX for Windows and PKG for MacOS **do not work**)
 
 If you find LosslessCut useful, I'm very thankful for [your support](https://github.com/mifi/lossless-cut#donate-).
 
-**What's the difference between App Stores and GitHub download?** [Please see FAQ](issues.md#app-stores-and-github-difference)
+What's the **difference between App Stores and GitHub download?** [Please see FAQ](issues.md#app-stores-and-github-difference)
 
 ### Nightly builds 🧪
 
@@ -164,6 +166,8 @@ Codecs and formats not listed above can still be converted to a supported format
 - Press <kbd>SHIFT</kbd> + <kbd>/</kbd> to view all keyboard & mouse shortcuts.
 - **Note:** The original video file will not be modified. Instead, a file is created file in the same directory as the original file with from/to timestamps in the file name.
 
+## [Installation](./installation.md)
+
 ## [Import / export](import-export.md)
 
 ## [Command line interface (CLI)](cli.md) & [HTTP API](api.md)
@@ -185,7 +189,7 @@ This project is maintained by me alone. The project will always remain free and 
 ## Featured
 
 - [Featured in the Console newsletter](https://console.substack.com/p/console-93)
-- [Hacker News](https://news.ycombinator.com/item?id=33969490)
+- Hacker News [2024](https://news.ycombinator.com/item?id=40829494) [2022](https://news.ycombinator.com/item?id=33969490) [2020-10](https://news.ycombinator.com/item?id=24883030) [2020-01](https://news.ycombinator.com/item?id=22026412) [2016](https://news.ycombinator.com/item?id=12885585)
 - Are you using LosslessCut for some interesting project and want your link here? Reach out!
 
 <img src="https://api.star-history.com/svg?repos=mifi/lossless-cut&type=Date" alt="Star History Chart" width="400px" />
